@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{21AA77E2-7813-4203-BB22-3DE176A67763}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="StyledTaskDlgDemo\AnimatedTaskDialogDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="StyledTaskDlgDemo\StyledTaskDialogDemo.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="AnimatedTaskDialogDemo">
+        <MSBuild Projects="StyledTaskDlgDemo\AnimatedTaskDialogDemo.dproj"/>
+    </Target>
+    <Target Name="AnimatedTaskDialogDemo:Clean">
+        <MSBuild Projects="StyledTaskDlgDemo\AnimatedTaskDialogDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="AnimatedTaskDialogDemo:Make">
+        <MSBuild Projects="StyledTaskDlgDemo\AnimatedTaskDialogDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="StyledTaskDialogDemo">
+        <MSBuild Projects="StyledTaskDlgDemo\StyledTaskDialogDemo.dproj"/>
+    </Target>
+    <Target Name="StyledTaskDialogDemo:Clean">
+        <MSBuild Projects="StyledTaskDlgDemo\StyledTaskDialogDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="StyledTaskDialogDemo:Make">
+        <MSBuild Projects="StyledTaskDlgDemo\StyledTaskDialogDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="AnimatedTaskDialogDemo;StyledTaskDialogDemo"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="AnimatedTaskDialogDemo:Clean;StyledTaskDialogDemo:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="AnimatedTaskDialogDemo:Make;StyledTaskDialogDemo:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

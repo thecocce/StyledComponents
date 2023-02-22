@@ -36,7 +36,6 @@ uses
 type
   TMainForm = class(TForm)
     TaskDialog: TTaskDialog;
-    StyledTaskDialog: TStyledTaskDialog;
     ExtraGroupBox: TGroupBox;
     ExpandedTextLabel: TLabel;
     ExpandedTextMemo: TMemo;
@@ -74,6 +73,7 @@ type
     Label2: TLabel;
     gbResult: TGroupBox;
     MRLabel: TLabel;
+    StyledTaskDialog: TStyledTaskDialog;
     procedure FormCreate(Sender: TObject);
     procedure ShowDlg(Sender: TObject);
     procedure RaiseError(Sender: TObject);
@@ -86,6 +86,8 @@ type
     procedure cbChangeStyleSelect(Sender: TObject);
     procedure FamilyComboBoxSelect(Sender: TObject);
     procedure RaiseDatabaseError(Sender: TObject);
+    procedure StyledTaskDialogTimer(Sender: TObject; TickCount: Cardinal;
+      var Reset: Boolean);
   private
     procedure ShowSelection(const AModalResult: TModalResult);
     procedure BuildStyleList;
@@ -109,6 +111,18 @@ uses
   , Vcl.StyledCmpStrUtils
   , Vcl.ButtonStylesAttributes
   , Vcl.StyledTaskDialogFormUnit;
+
+procedure CloseMessageBox(AWnd: HWND; AMsg: UINT; AIDEvent: UINT_PTR;
+  ATicks: DWORD); stdcall;
+var
+  Wnd: HWND;
+begin
+  KillTimer(AWnd, AIDEvent);
+  // active window of the calling thread should be the message box
+  Wnd := GetActiveWindow;
+  if IsWindow(Wnd) then
+    PostMessage(Wnd, WM_CLOSE, 0, 0);
+end;
 
 procedure TMainForm.BuildStyleList;
 var
@@ -213,6 +227,12 @@ begin
     MRLabel.Caption :=  Format('"%s"', [LResultMsg]);
 end;
 
+procedure TMainForm.StyledTaskDialogTimer(Sender: TObject; TickCount: Cardinal;
+  var Reset: Boolean);
+begin
+  Beep;
+end;
+
 procedure TMainForm.ShowDlg(Sender: TObject);
 var
   Buttons: TMsgDlgButtons;
@@ -221,6 +241,8 @@ var
   LUseDefault: boolean;
   LResult: TModalResult;
 begin
+  var TimerId := SetTimer(0, 0, 3 * 1000, @CloseMessageBox);
+
   Buttons := [];
   LUseDefault := False;
   LDefaultButton := mbOK;
@@ -265,6 +287,8 @@ begin
       LResult := mrNone;
   end;
   ShowSelection(LResult);
+
+  KillTimer(0, TimerId);
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
@@ -401,10 +425,10 @@ end;
 
 procedure TMainForm.TaskDialogTimer(Sender: TObject; TickCount: Cardinal; var Reset: Boolean);
 begin
-   // TaskDialog1.ProgressBar.Position := MyThread.CurrentProgressPercent;
+   //TaskDialog.ProgressBar.Position := 0; //MyThread.CurrentProgressPercent;
    // Demo
-   //TaskDialog.ProgressBar.Position :=  TaskDialog.ProgressBar.Position + 1;
-   TaskDialog.Execute(Self.Handle);
+   TaskDialog.ProgressBar.Position :=  TaskDialog.ProgressBar.Position + 1;
+   //TaskDialog.Execute(Self.Handle);
 end;
 
 initialization

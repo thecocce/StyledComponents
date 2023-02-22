@@ -13,12 +13,10 @@ object MainForm: TMainForm
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = True
   Position = poScreenCenter
   ShowHint = True
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
   TextHeight = 13
   object ExtraGroupBox: TGroupBox
     Left = 0
@@ -27,7 +25,7 @@ object MainForm: TMainForm
     Height = 230
     Align = alBottom
     Caption = 'Use Style Dialog Component with extra feature'
-    TabOrder = 0
+    TabOrder = 1
     DesignSize = (
       745
       230)
@@ -81,7 +79,7 @@ object MainForm: TMainForm
       Lines.Strings = (
         'Expanded Text'
         'second expanded line')
-      TabOrder = 1
+      TabOrder = 2
       WordWrap = False
     end
     object btUseStyledDialogComp: TButton
@@ -91,7 +89,7 @@ object MainForm: TMainForm
       Height = 25
       Anchors = [akTop, akRight]
       Caption = 'Use StyledTaskDialog comp.'
-      TabOrder = 5
+      TabOrder = 4
       OnClick = UseStyleDialogCompClick
     end
     object btUseNativeDialogComp: TButton
@@ -101,7 +99,7 @@ object MainForm: TMainForm
       Height = 25
       Anchors = [akTop, akRight]
       Caption = 'Use native TaskDialog comp.'
-      TabOrder = 6
+      TabOrder = 5
       OnClick = UseStyleDialogCompClick
     end
     object FooterTextMemo: TMemo
@@ -113,7 +111,7 @@ object MainForm: TMainForm
       Lines.Strings = (
         'Footer Text'
         'second footer line')
-      TabOrder = 2
+      TabOrder = 3
       WordWrap = False
     end
     object VerificationTextMemo: TMemo
@@ -125,7 +123,7 @@ object MainForm: TMainForm
       Lines.Strings = (
         'Verification Text'
         'second Verification line')
-      TabOrder = 3
+      TabOrder = 6
       WordWrap = False
     end
     object rgMainIcon: TRadioGroup
@@ -142,7 +140,7 @@ object MainForm: TMainForm
         'tdiError'
         'tdiInformation'
         'tdiShield')
-      TabOrder = 4
+      TabOrder = 0
     end
     object CaptionEdit: TEdit
       Left = 112
@@ -150,7 +148,7 @@ object MainForm: TMainForm
       Width = 413
       Height = 21
       Anchors = [akLeft, akTop, akRight]
-      TabOrder = 0
+      TabOrder = 1
       Text = 'Caption'
     end
     object cbChangeStyle: TComboBox
@@ -170,7 +168,7 @@ object MainForm: TMainForm
     Width = 745
     Height = 343
     Align = alClient
-    TabOrder = 1
+    TabOrder = 0
     object LeftPanelClient: TPanel
       Left = 1
       Top = 1
@@ -219,7 +217,7 @@ object MainForm: TMainForm
         Width = 396
         Height = 21
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 0
+        TabOrder = 1
         Text = 'Task dialog Tester'
       end
       object edMessage: TMemo
@@ -229,7 +227,7 @@ object MainForm: TMainForm
         Height = 162
         Anchors = [akLeft, akTop, akRight, akBottom]
         ScrollBars = ssVertical
-        TabOrder = 1
+        TabOrder = 2
       end
       object FontComboBox: TComboBox
         Left = 337
@@ -237,7 +235,7 @@ object MainForm: TMainForm
         Width = 160
         Height = 21
         Anchors = [akLeft, akBottom]
-        TabOrder = 2
+        TabOrder = 4
         Text = 'FontComboBox'
         OnSelect = FontComboBoxSelect
       end
@@ -248,7 +246,7 @@ object MainForm: TMainForm
         Height = 25
         Anchors = [akLeft, akBottom]
         Caption = 'Custom Task Dialog'
-        TabOrder = 3
+        TabOrder = 5
         OnClick = ShowDlg
       end
       object btNativeTaskDialog: TButton
@@ -258,7 +256,7 @@ object MainForm: TMainForm
         Height = 25
         Anchors = [akLeft, akBottom]
         Caption = 'Native Task Dialog'
-        TabOrder = 4
+        TabOrder = 6
         OnClick = ShowDlg
       end
       object btRaiseErrorTaskDialog: TButton
@@ -268,7 +266,7 @@ object MainForm: TMainForm
         Height = 25
         Anchors = [akLeft, akBottom]
         Caption = 'Raise Database Error'
-        TabOrder = 5
+        TabOrder = 7
         OnClick = RaiseDatabaseError
       end
       object btCustomMsgDialog: TButton
@@ -278,7 +276,7 @@ object MainForm: TMainForm
         Height = 25
         Anchors = [akLeft, akBottom]
         Caption = 'Custom Message Dialog'
-        TabOrder = 6
+        TabOrder = 8
         OnClick = ShowDlg
       end
       object btNativeMsgDialog: TButton
@@ -288,7 +286,7 @@ object MainForm: TMainForm
         Height = 25
         Anchors = [akLeft, akBottom]
         Caption = 'Native Message Dialog'
-        TabOrder = 7
+        TabOrder = 9
         OnClick = ShowDlg
       end
       object btRaiseErrorMsgDialog: TButton
@@ -298,7 +296,7 @@ object MainForm: TMainForm
         Height = 25
         Anchors = [akLeft, akBottom]
         Caption = 'Raise Generic Error'
-        TabOrder = 8
+        TabOrder = 10
         OnClick = RaiseError
       end
       object FamilyComboBox: TComboBox
@@ -309,7 +307,7 @@ object MainForm: TMainForm
         Style = csDropDownList
         Anchors = [akLeft, akBottom]
         ItemIndex = 0
-        TabOrder = 9
+        TabOrder = 3
         Text = 'Classic'
         OnSelect = FamilyComboBoxSelect
         Items.Strings = (
@@ -325,7 +323,7 @@ object MainForm: TMainForm
         Height = 60
         Anchors = [akTop, akRight]
         Caption = 'ModalResult'
-        TabOrder = 10
+        TabOrder = 0
         object MRLabel: TLabel
           AlignWithMargins = True
           Left = 5
@@ -393,8 +391,9 @@ object MainForm: TMainForm
     Buttons = <>
     Caption = 'Caption'
     ExpandedText = 'Expanded Text'
-    Flags = [tfEnableHyperlinks, tfAllowDialogCancellation]
+    Flags = [tfEnableHyperlinks, tfShowProgressBar, tfCallbackTimer]
     FooterText = 'Footer Text'
+    ProgressBar.MarqueeSpeed = 30
     RadioButtons = <>
     Text = 
       'Message Text Lorem ipsum dolor sit amet, consectetur adipiscing ' +
@@ -414,12 +413,15 @@ object MainForm: TMainForm
       'ulla pariatur. Excepteur sint occaecat cupidatat non proident, s' +
       'unt in culpa qui officia deserunt mollit anim id est laborum'
     VerificationText = 'Verification Test'
+    OnTimer = TaskDialogTimer
     Left = 178
     Top = 119
   end
   object StyledTaskDialog: TStyledTaskDialog
     Buttons = <>
     Caption = 'CAPTION'
+    Flags = [tfShowProgressBar, tfCallbackTimer]
+    ProgressBar.MarqueeSpeed = 30
     RadioButtons = <>
     Text = 
       'Message Text Lorem ipsum dolor sit amet, consectetur adipiscing ' +
@@ -438,6 +440,7 @@ object MainForm: TMainForm
       ' reprehenderit in voluptate velit esse cillum dolore eu fugiat n' +
       'ulla pariatur. Excepteur sint occaecat cupidatat non proident, s' +
       'unt in culpa qui officia deserunt mollit anim id est laborum'
+    OnTimer = StyledTaskDialogTimer
     Left = 297
     Top = 119
   end

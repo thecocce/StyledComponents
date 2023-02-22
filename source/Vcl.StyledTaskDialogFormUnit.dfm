@@ -3,7 +3,7 @@ object StyledTaskDialogForm: TStyledTaskDialogForm
   Top = 0
   BorderIcons = []
   BorderStyle = bsSizeToolWin
-  ClientHeight = 244
+  ClientHeight = 258
   ClientWidth = 1004
   Color = clWindow
   Constraints.MinHeight = 200
@@ -22,15 +22,16 @@ object StyledTaskDialogForm: TStyledTaskDialogForm
   TextHeight = 13
   object BottomBevel: TBevel
     Left = 0
-    Top = 184
+    Top = 198
     Width = 1004
     Height = 3
     Align = alBottom
     Shape = bsBottomLine
+    ExplicitTop = 184
   end
   object FooterPanel: TPanel
     Left = 0
-    Top = 187
+    Top = 201
     Width = 1004
     Height = 57
     Align = alBottom
@@ -38,7 +39,7 @@ object StyledTaskDialogForm: TStyledTaskDialogForm
     BevelKind = bkFlat
     BevelOuter = bvNone
     ParentBackground = False
-    TabOrder = 0
+    TabOrder = 2
     object FooterTextLabel: TLabel
       AlignWithMargins = True
       Left = 4
@@ -52,6 +53,7 @@ object StyledTaskDialogForm: TStyledTaskDialogForm
       Align = alTop
       Caption = 'FooterTextLabel'
       WordWrap = True
+      ExplicitWidth = 81
     end
   end
   object CenterPanel: TPanel
@@ -59,7 +61,7 @@ object StyledTaskDialogForm: TStyledTaskDialogForm
     Left = 4
     Top = 4
     Width = 996
-    Height = 136
+    Height = 150
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -68,31 +70,31 @@ object StyledTaskDialogForm: TStyledTaskDialogForm
     BevelOuter = bvNone
     Color = clWindow
     ParentBackground = False
-    TabOrder = 1
+    TabOrder = 0
     object ImagePanel: TPanel
       AlignWithMargins = True
       Left = 4
       Top = 4
       Width = 128
-      Height = 128
+      Height = 142
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 4
       Align = alLeft
       BevelOuter = bvNone
-      TabOrder = 0
+      TabOrder = 1
     end
     object MessageScrollBox: TScrollBox
       Left = 136
       Top = 0
       Width = 860
-      Height = 136
+      Height = 150
       Align = alClient
       BevelInner = bvNone
       BevelOuter = bvNone
       BorderStyle = bsNone
-      TabOrder = 1
+      TabOrder = 0
       object TitleLabel: TLabel
         AlignWithMargins = True
         Left = 4
@@ -106,6 +108,7 @@ object StyledTaskDialogForm: TStyledTaskDialogForm
         Align = alTop
         Caption = 'Title Text'
         WordWrap = True
+        ExplicitWidth = 45
       end
       object AutoSizeLabel: TLabel
         AlignWithMargins = True
@@ -120,6 +123,7 @@ object StyledTaskDialogForm: TStyledTaskDialogForm
         Align = alTop
         Caption = 'AutoSizeLabel'
         WordWrap = True
+        ExplicitWidth = 72
       end
       object TextLabel: TLinkLabel
         AlignWithMargins = True
@@ -142,7 +146,7 @@ object StyledTaskDialogForm: TStyledTaskDialogForm
   end
   object ButtonsPanel: TPanel
     Left = 0
-    Top = 144
+    Top = 158
     Width = 1004
     Height = 40
     Margins.Left = 4
@@ -154,7 +158,7 @@ object StyledTaskDialogForm: TStyledTaskDialogForm
     DoubleBuffered = False
     ParentBackground = False
     ParentDoubleBuffered = False
-    TabOrder = 2
+    TabOrder = 1
     object YesButton: TStyledButton
       Tag = 0
       AlignWithMargins = True

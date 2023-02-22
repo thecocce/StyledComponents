@@ -69,6 +69,8 @@ type
     function Execute(ParentWnd: HWND): Boolean; overload; override;
     property HelpFile: string read FHelpFile write FHelpFile;
     property Position: TPoint read FPosition write FPosition;
+    property Flags;
+    constructor Create(AOwner: TComponent); override;
   end;
 
 function StyledMessageDlg(const Title, Msg: string; DlgType: TMsgDlgType;
@@ -340,6 +342,7 @@ var
 begin
   Application.ModalStarted;
   LTaskDialog := TStyledTaskDialog.Create(nil);
+  LTaskDialog.Flags := LTaskDialog.Flags + [tfCallbackTimer, tfShowProgressBar];
   try
     // Assign buttons
     for DlgBtn := Low(TMsgDlgBtn) to High(TMsgDlgBtn) do
@@ -452,6 +455,12 @@ begin
 end;
 
 { TStyledTaskDialog }
+constructor TStyledTaskDialog.Create(AOwner: TComponent);
+begin
+  inherited;
+  Flags := [tfAllowDialogCancellation];
+end;
+
 function TStyledTaskDialog.DoExecute(ParentWnd: HWND): Boolean;
 type
   TTaskDialogIcon = (tdiWarning, tdiError,

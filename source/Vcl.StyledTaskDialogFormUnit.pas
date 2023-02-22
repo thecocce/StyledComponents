@@ -99,6 +99,8 @@ type
     FDefaultButton: TTaskDialogCommonButton;
     FButtons: TTaskDialogButtons;
     FMainIcon: TTaskDialogIcon;
+    FFlags: TTaskDialogFlags;
+    FProgressBar: TTaskDialogProgressBar;
     procedure GetIconNameAndIndex(ATaskDialog: TMsgDlgType;
       out AImageName: string; out AImageIndex: Integer); overload;
     procedure GetIconNameAndIndex(ATaskDialogIcon: TTaskDialogIcon;
@@ -123,6 +125,7 @@ type
     function GetFocusedButton: TStyledButton;
     procedure InitDlgButtonsWithFamily(const AFamily: TStyledButtonFamily);
     procedure UpdateButtonVisibility;
+    procedure SetFlags(const Value: TTaskDialogFlags);
 (*
     property Button: TTaskDialogButtonItem read FButton write FButton;
 *)
@@ -139,11 +142,13 @@ type
     property FooterIcon: TTaskDialogIcon read FFooterIcon write SetFooterIcon default tdiNone;
     property Handle: HWND read FHandle;
 *)
+    property ProgressBar: TTaskDialogProgressBar read FProgressBar write FProgressBar;
+    property Flags: TTaskDialogFlags read FFlags write SetFlags default [tfAllowDialogCancellation];
     property FooterText: string read GetFooterText write SetFooterText;
     property HelpContext: Integer read GetHelpContext write SetHelpContext default 0;
     property MainIcon: TTaskDialogIcon read FMainIcon write FMainIcon default tdiInformation;
 (*
-    property ProgressBar: TTaskDialogProgressBar read FProgressBar write FProgressBar;
+
     property RadioButton: TTaskDialogRadioButtonItem read FRadioButton;
     property RadioButtons: TTaskDialogButtons read FRadioButtons write SetRadioButtons;
 *)
@@ -286,6 +291,11 @@ begin
         SetFocusToButton(LStyledButton);
     end;
   end;
+end;
+
+procedure TStyledTaskDialogForm.SetFlags(const Value: TTaskDialogFlags);
+begin
+  FFlags := Value;
 end;
 
 procedure TStyledTaskDialogForm.SetFocusToButton(AStyledButton: TStyledButton);
