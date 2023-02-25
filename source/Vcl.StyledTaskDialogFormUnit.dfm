@@ -340,4 +340,10 @@ object StyledTaskDialogForm: TStyledTaskDialogForm
       TabOrder = 11
     end
   end
+  object Timer1: TTimer
+    Enabled = False
+    OnTimer = Timer1Timer
+    Left = 228
+    Top = 84
+  end
 end

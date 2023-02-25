@@ -81,6 +81,7 @@ type
     HelpButton: TStyledButton;
     CloseButton: TStyledButton;
     FooterTextLabel: TLabel;
+    Timer1: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure ButtonClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -89,6 +90,7 @@ type
       LinkType: TSysLinkType);
     procedure FormDestroy(Sender: TObject);
     procedure HelpButtonClick(Sender: TObject);
+    procedure Timer1Timer(Sender: TObject);
   private
     FFocusedButton: TStyledButton;
     FCustomIcons: TStyledDialogIcons;
@@ -99,7 +101,7 @@ type
     FDefaultButton: TTaskDialogCommonButton;
     FButtons: TTaskDialogButtons;
     FMainIcon: TTaskDialogIcon;
-    FFlags: TTaskDialogFlags;
+    //FFlags: TTaskDialogFlags;
     FProgressBar: TTaskDialogProgressBar;
     procedure GetIconNameAndIndex(ATaskDialog: TMsgDlgType;
       out AImageName: string; out AImageIndex: Integer); overload;
@@ -125,7 +127,7 @@ type
     function GetFocusedButton: TStyledButton;
     procedure InitDlgButtonsWithFamily(const AFamily: TStyledButtonFamily);
     procedure UpdateButtonVisibility;
-    procedure SetFlags(const Value: TTaskDialogFlags);
+//    procedure SetFlags(const Value: TTaskDialogFlags);
 (*
     property Button: TTaskDialogButtonItem read FButton write FButton;
 *)
@@ -143,7 +145,7 @@ type
     property Handle: HWND read FHandle;
 *)
     property ProgressBar: TTaskDialogProgressBar read FProgressBar write FProgressBar;
-    property Flags: TTaskDialogFlags read FFlags write SetFlags default [tfAllowDialogCancellation];
+//    property Flags: TTaskDialogFlags read FFlags write SetFlags default [tfAllowDialogCancellation];
     property FooterText: string read GetFooterText write SetFooterText;
     property HelpContext: Integer read GetHelpContext write SetHelpContext default 0;
     property MainIcon: TTaskDialogIcon read FMainIcon write FMainIcon default tdiInformation;
@@ -293,10 +295,10 @@ begin
   end;
 end;
 
-procedure TStyledTaskDialogForm.SetFlags(const Value: TTaskDialogFlags);
-begin
-  FFlags := Value;
-end;
+//procedure TStyledTaskDialogForm.SetFlags(const Value: TTaskDialogFlags);
+//begin
+//  FFlags := Value;
+//end;
 
 procedure TStyledTaskDialogForm.SetFocusToButton(AStyledButton: TStyledButton);
 begin
@@ -512,6 +514,13 @@ procedure TStyledTaskDialogForm.TextLabelLinkClick(Sender: TObject;
 begin
   ShellExecute(Self.Handle, 'open' , PChar(Link),
     nil, nil, SW_SHOW );
+end;
+
+procedure TStyledTaskDialogForm.Timer1Timer(Sender: TObject);
+begin
+  var reset:Boolean;
+  if Assigned(FTaskDialog.OnTimer) then
+    FTaskDialog.OnTimer(Sender,1,reset);
 end;
 
 procedure TStyledTaskDialogForm.UpdateCustomIcons;
@@ -744,6 +753,11 @@ begin
     LForm.FTaskDialog := ATaskDialog;
     LForm.FDialogType := ADialogType;
     LForm.FDialogBtnFamily := ADialogBtnFamily;
+//    LForm.FFlags := ATaskDialog.Flags;
+    if LForm.FTaskDialog.Flags * [tfCallbackTimer] <> [] then begin
+      LForm.Timer1.Enabled := True;
+    end;
+
     LFont := GetDialogFont;
     LDlgBtnFamily := GetDialogBtnFamily;
     if Assigned(LFont) then
@@ -753,6 +767,7 @@ begin
     LForm.ShowModal;
     ATaskDialog.ModalResult := LForm.ModalResult;
     Result := True;
+
   finally
     LForm.Free;
   end;
