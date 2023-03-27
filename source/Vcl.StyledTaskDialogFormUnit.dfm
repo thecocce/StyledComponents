@@ -71,6 +71,9 @@ object StyledTaskDialogForm: TStyledTaskDialogForm
     Color = clWindow
     ParentBackground = False
     TabOrder = 0
+    DesignSize = (
+      996
+      150)
     object ImagePanel: TPanel
       AlignWithMargins = True
       Left = 4
@@ -142,6 +145,15 @@ object StyledTaskDialogForm: TStyledTaskDialogForm
         TabOrder = 0
         OnLinkClick = TextLabelLinkClick
       end
+    end
+    object ProgressBar1: TProgressBar
+      Left = 140
+      Top = 130
+      Width = 852
+      Height = 17
+      Anchors = [akLeft, akRight, akBottom]
+      TabOrder = 2
+      Visible = False
     end
   end
   object ButtonsPanel: TPanel
@@ -344,6 +356,6 @@ object StyledTaskDialogForm: TStyledTaskDialogForm
     Enabled = False
     OnTimer = Timer1Timer
     Left = 228
-    Top = 84
+    Top = 12
   end
 end

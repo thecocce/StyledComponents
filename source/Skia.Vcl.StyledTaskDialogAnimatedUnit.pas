@@ -80,7 +80,7 @@ begin
   LStream := TResourceStream.Create(HInstance, LImageName, RT_RCDATA);
   try
     SkAnimatedImage.LoadFromStream(LStream);
-    SkAnimatedImage.Loop := False;
+    //SkAnimatedImage.Loop := False;
 //    SkAnimatedImage.Animation.Start;
   finally
     LStream.Free;

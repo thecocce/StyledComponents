@@ -48,7 +48,7 @@ uses
   Vcl.StandardButtonStyles,
   Vcl.BootstrapButtonStyles,
   Vcl.AngularButtonStyles,
-  Vcl.ButtonStylesAttributes;
+  Vcl.ButtonStylesAttributes, Vcl.ComCtrls;
 
 type
   TTaskDialogLauncherHandler = class(TInterfacedObject, ITaskDialogLauncher)
@@ -82,6 +82,7 @@ type
     CloseButton: TStyledButton;
     FooterTextLabel: TLabel;
     Timer1: TTimer;
+    ProgressBar1: TProgressBar;
     procedure FormCreate(Sender: TObject);
     procedure ButtonClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -92,6 +93,7 @@ type
     procedure HelpButtonClick(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
   private
+    FTickCount:Cardinal;
     FFocusedButton: TStyledButton;
     FCustomIcons: TStyledDialogIcons;
     FTaskDialog: TCustomTaskDialog;
@@ -127,6 +129,8 @@ type
     function GetFocusedButton: TStyledButton;
     procedure InitDlgButtonsWithFamily(const AFamily: TStyledButtonFamily);
     procedure UpdateButtonVisibility;
+    procedure ApplyProgressBarValues;
+    procedure ApplyCountDownCaptions;
 //    procedure SetFlags(const Value: TTaskDialogFlags);
 (*
     property Button: TTaskDialogButtonItem read FButton write FButton;
@@ -519,8 +523,16 @@ end;
 procedure TStyledTaskDialogForm.Timer1Timer(Sender: TObject);
 begin
   var reset:Boolean;
+  var tick := GetTickCount() - FTickCount;
   if Assigned(FTaskDialog.OnTimer) then
-    FTaskDialog.OnTimer(Sender,1,reset);
+    FTaskDialog.OnTimer(Sender,tick,reset);
+
+  if reset then
+    tick := GetTickCount();
+
+  ApplyProgressBarValues;
+
+  ApplyCountDownCaptions;
 end;
 
 procedure TStyledTaskDialogForm.UpdateCustomIcons;
@@ -561,6 +573,8 @@ begin
   FCommonButtons := [tcbOk, tcbCancel];
   FDefaultButton := tcbOk;
   FDialogBtnFamily := DEFAULT_CLASSIC_FAMILY;
+
+  FTickCount := GetTickCount();
 end;
 
 procedure TStyledTaskDialogForm.DefaultDialogSize(out AClientWidth, AClientHeight, AImageSize: Integer);
@@ -737,6 +751,22 @@ begin
   UpdateButtonStyle(CloseButton);
 end;
 
+procedure TStyledTaskDialogForm.ApplyCountDownCaptions;
+begin
+
+end;
+
+procedure TStyledTaskDialogForm.ApplyProgressBarValues;
+begin
+  if FTaskDialog.Flags * [tfShowProgressBar] <> [] then begin
+    ProgressBar1.Visible := True;
+    ProgressBar1.Min := FTaskDialog.ProgressBar.Min;
+    ProgressBar1.Max := FTaskDialog.ProgressBar.Max;
+    ProgressBar1.Position := FTaskDialog.ProgressBar.Position;
+    ProgressBar1.State := FTaskDialog.ProgressBar.State;
+  end;
+end;
+
 { TTaskDialogLauncherHandler }
 
 function TTaskDialogLauncherHandler.DoExecute(ParentWnd: HWND;
@@ -757,6 +787,8 @@ begin
     if LForm.FTaskDialog.Flags * [tfCallbackTimer] <> [] then begin
       LForm.Timer1.Enabled := True;
     end;
+
+    LForm.ApplyProgressBarValues();
 
     LFont := GetDialogFont;
     LDlgBtnFamily := GetDialogBtnFamily;

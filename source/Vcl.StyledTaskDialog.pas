@@ -37,6 +37,7 @@ uses
   , Vcl.Graphics
   , Vcl.Forms
   , Vcl.ButtonStylesAttributes
+  , Winapi.Messages
   ;
 
 type
@@ -59,36 +60,45 @@ type
     FHelpFile: string;
     FParentWnd: HWND;
     FPosition: TPoint;
+    FAutoCloseDelayMS:Cardinal;
   strict protected
     function DoExecute(ParentWnd: HWND): Boolean; override;
     procedure DoOnButtonClicked(AModalResult: Integer; var CanClose: Boolean); override;
     procedure DoOnDialogCreated; override;
     procedure DoOnHelp; override;
     procedure DoOnHyperlinkClicked(const AURL: string); override;
+
   public
     function Execute(ParentWnd: HWND): Boolean; overload; override;
     property HelpFile: string read FHelpFile write FHelpFile;
     property Position: TPoint read FPosition write FPosition;
     property Flags;
     constructor Create(AOwner: TComponent); override;
+    property AutoCloseDelayMS:Cardinal read FAutoCloseDelayMS write FAutoCloseDelayMS;
   end;
 
 function StyledMessageDlg(const Title, Msg: string; DlgType: TMsgDlgType;
-  Buttons: TMsgDlgButtons; HelpCtx: Longint): Integer; overload;
+  Buttons: TMsgDlgButtons; HelpCtx: Longint;
+    AutoCloseDelayMS:Cardinal = 0): Integer; overload;
 function StyledMessageDlg(const Title, Msg: string; DlgType: TMsgDlgType;
-  Buttons: TMsgDlgButtons; HelpCtx: Longint; DefaultButton: TMsgDlgBtn): Integer; overload;
+  Buttons: TMsgDlgButtons; HelpCtx: Longint; DefaultButton: TMsgDlgBtn;
+    AutoCloseDelayMS:Cardinal = 0): Integer; overload;
 function StyledMessageDlgPos(const Msg: string; DlgType: TMsgDlgType;
   Buttons: TMsgDlgButtons; HelpCtx: Longint;
-  X: Integer = -1; Y: Integer = -1): Integer; overload;
+  X: Integer = -1; Y: Integer = -1;
+    AutoCloseDelayMS:Cardinal = 0): Integer; overload;
 function StyledMessageDlgPos(const Msg: string; DlgType: TMsgDlgType;
   Buttons: TMsgDlgButtons; DefaultButton: TMsgDlgBtn; HelpCtx: Longint;
-  X: Integer = -1; Y: Integer = -1): Integer; overload;
+  X: Integer = -1; Y: Integer = -1;
+    AutoCloseDelayMS:Cardinal = 0): Integer; overload;
 function StyledTaskDlgPos(const Title, Msg: string; DlgType: TMsgDlgType;
   Buttons: TMsgDlgButtons; HelpCtx: Longint;
-  X: Integer = -1; Y: Integer = -1): Integer; overload;
+  X: Integer = -1; Y: Integer = -1;
+    AutoCloseDelayMS:Cardinal = 0): Integer; overload;
 function StyledTaskDlgPos(const Title, Msg: string; DlgType: TMsgDlgType;
   Buttons: TMsgDlgButtons; DefaultButton: TMsgDlgBtn; HelpCtx: Longint;
-  X: Integer = -1; Y: Integer = -1): Integer; overload;
+  X: Integer = -1; Y: Integer = -1;
+    AutoCloseDelayMS:Cardinal = 0): Integer; overload;
 
 procedure SetUseAlwaysTaskDialog(Value: boolean);
 procedure RegisterCustomExecute(const AShowStyledTaskDialog: ITaskDialogLauncher;
@@ -127,6 +137,8 @@ var
   DialogFont: TFont;
   UseAlwaysTaskDialog: boolean;
 
+  TimerId:NativeUint;
+
   ButtonNames: array[TMsgDlgBtn] of string = (
     'Yes', 'No', 'OK', 'Cancel', 'Abort', 'Retry', 'Ignore', 'All', 'NoToAll',
     'YesToAll','Help','Close');
@@ -154,26 +166,27 @@ begin
 end;
 
 function StyledMessageDlg(const Title, Msg: string; DlgType: TMsgDlgType;
-  Buttons: TMsgDlgButtons; HelpCtx: Longint): Integer;
+  Buttons: TMsgDlgButtons; HelpCtx: Longint; AutoCloseDelayMS:Cardinal = 0): Integer;
 begin
-  Result := StyledTaskDlgPos(Title, Msg, DlgType, Buttons, HelpCtx, -1, -1);
+  Result := StyledTaskDlgPos(Title, Msg, DlgType, Buttons, HelpCtx, -1, -1, AutoCloseDelayMS);
 end;
 
 function StyledMessageDlg(const Title, Msg: string; DlgType: TMsgDlgType;
-  Buttons: TMsgDlgButtons; HelpCtx: Longint; DefaultButton: TMsgDlgBtn): Integer; overload;
+  Buttons: TMsgDlgButtons; HelpCtx: Longint; DefaultButton: TMsgDlgBtn; AutoCloseDelayMS:Cardinal = 0): Integer; overload;
 begin
   Result := StyledTaskDlgPos(Title, Msg, DlgType, Buttons, DefaultButton,
-    HelpCtx, -1, -1);
+    HelpCtx, -1, -1, AutoCloseDelayMS);
 end;
 
 function StyleMessageDlgPos(const Msg: string; DlgType: TMsgDlgType;
-  Buttons: TMsgDlgButtons; HelpCtx: Longint; X, Y: Integer): Integer;
+  Buttons: TMsgDlgButtons; HelpCtx: Longint; X, Y: Integer; AutoCloseDelayMS:Cardinal = 0): Integer;
 begin
+  //TODOCOCCE
   Result := MessageDlgPosHelp(Msg, DlgType, Buttons, HelpCtx, X, Y, '');
 end;
 
 function StyledMessageDlgPos(const Msg: string; DlgType: TMsgDlgType;
-  Buttons: TMsgDlgButtons; HelpCtx: Longint; X: Integer = -1; Y: Integer = -1): Integer;
+  Buttons: TMsgDlgButtons; HelpCtx: Longint; X: Integer = -1; Y: Integer = -1; AutoCloseDelayMS:Cardinal = 0): Integer;
 var
   DefaultButton: TMsgDlgBtn;
 begin
@@ -192,11 +205,11 @@ begin
   else DefaultButton := mbYes;
   if Buttons = [] then
     Buttons := [mbOK];
-  Result := StyledMessageDlgPos(Msg, DlgType, Buttons, DefaultButton, HelpCtx, X, Y);
+  Result := StyledMessageDlgPos(Msg, DlgType, Buttons, DefaultButton, HelpCtx, X, Y, AutoCloseDelayMS);
 end;
 
 function StyledMessageDlgPos(const Msg: string; DlgType: TMsgDlgType;
-  Buttons: TMsgDlgButtons; DefaultButton: TMsgDlgBtn; HelpCtx: Longint; X: Integer = -1; Y: Integer = -1): Integer;
+  Buttons: TMsgDlgButtons; DefaultButton: TMsgDlgBtn; HelpCtx: Longint; X: Integer = -1; Y: Integer = -1; AutoCloseDelayMS:Cardinal = 0): Integer;
 var
   Dlg : TForm;
   MyMsg : string;
@@ -215,7 +228,7 @@ begin
   if IsTaskMessageSupported and UseAlwaysTaskDialog then
   begin
     //Use a TaskDialog to Show the message instead of a MessageDialog
-    Result := StyledTaskDlgPos('',Msg,DlgType,Buttons,DefaultButton,HelpCtx,X,Y);
+    Result := StyledTaskDlgPos('',Msg,DlgType,Buttons,DefaultButton,HelpCtx,X,Y,AutoCloseDelayMS);
   end
   else
   begin
@@ -329,7 +342,7 @@ end;
 function DoTaskMessageDlgPos(const Instruction, Msg: string; DlgType: TMsgDlgType;
   Buttons: TMsgDlgButtons; HelpCtx: Longint; DefaultButton: TMsgDlgBtn;
   X: Integer = -1; Y: Integer = -1;
-  CustomIcon : TIcon = nil): Integer;
+  CustomIcon : TIcon = nil; AutoCloseDelayMS:Cardinal = 0): Integer;
 const
   IconMap: array[TMsgDlgType] of TTaskDialogIcon = (tdiWarning, tdiError,
     tdiInformation, tdiInformation, tdiNone);
@@ -342,7 +355,7 @@ var
 begin
   Application.ModalStarted;
   LTaskDialog := TStyledTaskDialog.Create(nil);
-  LTaskDialog.Flags := LTaskDialog.Flags + [tfCallbackTimer, tfShowProgressBar];
+  LTaskDialog.Flags := LTaskDialog.Flags + [tfCallbackTimer {, tfShowProgressBar}];
   try
     // Assign buttons
     for DlgBtn := Low(TMsgDlgBtn) to High(TMsgDlgBtn) do
@@ -415,8 +428,20 @@ begin
   end;
 end;
 
+procedure CloseMessageBox(AWnd: HWND; AMsg: UINT; AIDEvent: UINT_PTR;
+  ATicks: DWORD); stdcall;
+var
+  Wnd: HWND;
+begin
+  KillTimer(AWnd, AIDEvent);
+  Wnd := GetActiveWindow;
+  if IsWindow(Wnd) then
+    PostMessage(Wnd, WM_CLOSE, 0, 0);
+end;
+
 function StyledTaskDlgPos(const Title, Msg: string; DlgType: TMsgDlgType;
-  Buttons: TMsgDlgButtons; HelpCtx: Longint; X: Integer = -1; Y: Integer = -1): Integer;
+  Buttons: TMsgDlgButtons; HelpCtx: Longint; X: Integer = -1; Y: Integer = -1;
+    AutoCloseDelayMS:Cardinal = 0): Integer;
 var
   DefaultButton: TMsgDlgBtn;
 begin
@@ -435,23 +460,30 @@ begin
 
   else DefaultButton := mbYes;
 
-  Result := StyledTaskDlgPos(Title, Msg, DlgType, Buttons, DefaultButton, HelpCtx, X, Y);
+  Result := StyledTaskDlgPos(Title, Msg, DlgType, Buttons, DefaultButton, HelpCtx, X, Y, AutoCloseDelayMS);
 end;
+
 
 function StyledTaskDlgPos(const Title, Msg: string; DlgType: TMsgDlgType;
   Buttons: TMsgDlgButtons; DefaultButton: TMsgDlgBtn; HelpCtx: Longint;
-  X: Integer = -1; Y: Integer = -1): Integer;
+  X: Integer = -1; Y: Integer = -1; AutoCloseDelayMS:Cardinal = 0): Integer;
 var
   MsgWithTitle: string;
 begin
+  if AutoCloseDelayMS > 0 then
+    TimerId := SetTimer(0, 0, 3 * 1000, @CloseMessageBox);
+
   if Title <> '' then
     MsgWithTitle := UpperCase(Title)+sLineBreak+Msg
   else
     MsgWithTitle := Msg;
   if IsTaskMessageSupported then
-    Result := DoTaskMessageDlgPos(Title, Msg, DlgType, Buttons, HelpCtx, DefaultButton, X, Y)
+    Result := DoTaskMessageDlgPos(Title, Msg, DlgType, Buttons, HelpCtx, DefaultButton, X, Y, nil, AutoCloseDelayMS)
   else
-    Result := StyledMessageDlgPos(MsgWithTitle, DlgType, Buttons, DefaultButton, HelpCtx, -1, -1);
+    Result := StyledMessageDlgPos(MsgWithTitle, DlgType, Buttons, DefaultButton, HelpCtx, -1, -1, AutoCloseDelayMS);
+
+  if AutoCloseDelayMS > 0 then
+    KillTimer(0, TimerId);
 end;
 
 { TStyledTaskDialog }
@@ -459,6 +491,7 @@ constructor TStyledTaskDialog.Create(AOwner: TComponent);
 begin
   inherited;
   Flags := [tfAllowDialogCancellation];
+  FAutoCloseDelayMS := 0;
 end;
 
 function TStyledTaskDialog.DoExecute(ParentWnd: HWND): Boolean;
@@ -567,6 +600,7 @@ end;
 initialization
   UseAlwaysTaskDialog := True;
   DialogFont := nil;
+  TimerId := 0;
 
 finalization
   if Assigned(DialogFont) then
