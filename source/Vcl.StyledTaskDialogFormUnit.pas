@@ -83,6 +83,7 @@ type
     FooterTextLabel: TLabel;
     Timer1: TTimer;
     ProgressBar1: TProgressBar;
+    AutocloseDelayLabel: TLinkLabel;
     procedure FormCreate(Sender: TObject);
     procedure ButtonClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -94,6 +95,7 @@ type
     procedure Timer1Timer(Sender: TObject);
   private
     FTickCount:Cardinal;
+    FAutoCloseDelayMS:Cardinal;
     FFocusedButton: TStyledButton;
     FCustomIcons: TStyledDialogIcons;
     FTaskDialog: TCustomTaskDialog;
@@ -375,6 +377,10 @@ begin
 
   TextLabel.Font.Assign(AutoSizeLabel.Font);
   TextLabel.Height := AutoSizeLabel.Height;
+
+  AutocloseDelayLabel.Font.Assign(AutoSizeLabel.Font);
+  AutocloseDelayLabel.Height := AutoSizeLabel.Height;
+
   AutoSizeLabel.Visible := False;
 
   MessageScrollBox.VertScrollBar.Visible :=
@@ -511,6 +517,8 @@ begin
 *)
   //Load and show Image
   LoadDialogImage;
+
+  ApplyCountDownCaptions;
 end;
 
 procedure TStyledTaskDialogForm.TextLabelLinkClick(Sender: TObject;
@@ -531,7 +539,6 @@ begin
     tick := GetTickCount();
 
   ApplyProgressBarValues;
-
   ApplyCountDownCaptions;
 end;
 
@@ -573,8 +580,6 @@ begin
   FCommonButtons := [tcbOk, tcbCancel];
   FDefaultButton := tcbOk;
   FDialogBtnFamily := DEFAULT_CLASSIC_FAMILY;
-
-  FTickCount := GetTickCount();
 end;
 
 procedure TStyledTaskDialogForm.DefaultDialogSize(out AClientWidth, AClientHeight, AImageSize: Integer);
@@ -661,6 +666,8 @@ begin
   AdjustWidth;
   PlayMessageDlgSound;
   FocusDefaultButton;
+  ApplyProgressBarValues;
+  ApplyCountDownCaptions;
 end;
 
 function TStyledTaskDialogForm.GetFooterText: string;
@@ -717,6 +724,7 @@ begin
   CancelButton.Caption := STR_CANCEL;
   HelpButton.Caption := STR_HELP;
   RetryButton.Caption := STR_RETRY;
+  OutputDebugString(PChar('AdjustButtonsCaption'));
 end;
 
 procedure TStyledTaskDialogForm.Loaded;
@@ -753,7 +761,15 @@ end;
 
 procedure TStyledTaskDialogForm.ApplyCountDownCaptions;
 begin
-
+  if FAutoCloseDelayMS > 0 then begin
+    AutocloseDelayLabel.Visible := True;
+//    var str := Trunc(((GetTickCount() -  FTickCount)/1000)).ToString + '/' + (FAutoCloseDelayMS div 1000).ToString;
+    var str := ((FAutoCloseDelayMS div 1000)  - Trunc(((GetTickCount() -  FTickCount)/1000)) ).ToString + '...';
+    AutocloseDelayLabel.Caption := str;
+    AdjustButtonsCaption;
+    OKButton.Caption := OKButton.Caption + '(' + str + ')';
+    OutputDebugString(PChar(OKButton.Caption));
+  end;
 end;
 
 procedure TStyledTaskDialogForm.ApplyProgressBarValues;
@@ -788,7 +804,6 @@ begin
       LForm.Timer1.Enabled := True;
     end;
 
-    LForm.ApplyProgressBarValues();
 
     LFont := GetDialogFont;
     LDlgBtnFamily := GetDialogBtnFamily;
@@ -796,10 +811,20 @@ begin
       LForm.SetDialogFont(LFont)
     else
       LForm.SetDialogFont(Screen.MessageFont);
+
+    LForm.FTickCount := GetTickCount();
+    LForm.FAutoCloseDelayMS := 0;
+
+    if LForm.FTaskDialog is TStyledTaskDialog then
+      LForm.FAutoCloseDelayMS := TStyledTaskDialog(LForm.FTaskDialog).AutoCloseDelayMS;
+
+    LForm.ApplyProgressBarValues();
+    Lform.ApplyCountDownCaptions();
+
+
     LForm.ShowModal;
     ATaskDialog.ModalResult := LForm.ModalResult;
     Result := True;
-
   finally
     LForm.Free;
   end;

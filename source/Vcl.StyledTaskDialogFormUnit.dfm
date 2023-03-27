@@ -145,6 +145,24 @@ object StyledTaskDialogForm: TStyledTaskDialogForm
         TabOrder = 0
         OnLinkClick = TextLabelLinkClick
       end
+      object AutocloseDelayLabel: TLinkLabel
+        AlignWithMargins = True
+        Left = 4
+        Top = 108
+        Width = 137
+        Height = 15
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        AutoSize = False
+        BevelInner = bvNone
+        BevelOuter = bvNone
+        Caption = 'Autoclose Delay Label'
+        TabOrder = 1
+        Visible = False
+        OnLinkClick = TextLabelLinkClick
+      end
     end
     object ProgressBar1: TProgressBar
       Left = 140

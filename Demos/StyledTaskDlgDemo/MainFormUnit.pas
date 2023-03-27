@@ -230,8 +230,15 @@ end;
 procedure TMainForm.StyledTaskDialogTimer(Sender: TObject; TickCount: Cardinal;
   var Reset: Boolean);
 begin
-  Beep;
+  StyledTaskDialog.ProgressBar.Position :=  StyledTaskDialog.ProgressBar.Position + 1;
+  //Beep;
 end;
+
+procedure TMainForm.TaskDialogTimer(Sender: TObject; TickCount: Cardinal; var Reset: Boolean);
+begin
+   TaskDialog.ProgressBar.Position :=  TaskDialog.ProgressBar.Position + 1;
+end;
+
 
 procedure TMainForm.ShowDlg(Sender: TObject);
 var
@@ -241,8 +248,6 @@ var
   LUseDefault: boolean;
   LResult: TModalResult;
 begin
-  var TimerId := SetTimer(0, 0, 3 * 1000, @CloseMessageBox);
-
   Buttons := [];
   LUseDefault := False;
   LDefaultButton := mbOK;
@@ -263,32 +268,30 @@ begin
   if LUseDefault then
   begin
     if Sender = btCustomTaskDialog then
-      LResult := StyledTaskDlgPos(edTitle.Text, edMessage.Text, TMsgDlgType(rgDlgType.ItemIndex), Buttons, LDefaultButton, HelpContext)
+      LResult := StyledTaskDlgPos(edTitle.Text, edMessage.Text, TMsgDlgType(rgDlgType.ItemIndex), Buttons, LDefaultButton, HelpContext, -1, -1, 2000)
     else if Sender = btNativeTaskDialog then
       LResult := TaskMessageDlg(edTitle.Text, edMessage.Text, TMsgDlgType(rgDlgType.ItemIndex), Buttons, HelpContext)
     else if Sender = btNativeMsgDialog then
       LResult := MessageDlg(edMessage.Text, TMsgDlgType(rgDlgType.ItemIndex), Buttons, 0)
     else if Sender = btCustomMsgDialog then
-      LResult := StyledMessageDlgPos(edMessage.Text, TMsgDlgType(rgDlgType.ItemIndex), Buttons, LDefaultButton, HelpContext)
+      LResult := StyledMessageDlgPos(edMessage.Text, TMsgDlgType(rgDlgType.ItemIndex), Buttons, LDefaultButton, HelpContext, -1, -1, 2000)
     else
       LResult := mrNone;
   end
   else
   begin
     if Sender = btCustomTaskDialog then
-      LResult := StyledTaskDlgPos(edTitle.Text, edMessage.Text, TMsgDlgType(rgDlgType.ItemIndex), Buttons, HelpContext)
+      LResult := StyledTaskDlgPos(edTitle.Text, edMessage.Text, TMsgDlgType(rgDlgType.ItemIndex), Buttons, HelpContext, -1, -1, 2000)
     else if Sender = btNativeTaskDialog then
       LResult := TaskMessageDlg(edTitle.Text, edMessage.Text, TMsgDlgType(rgDlgType.ItemIndex), Buttons, HelpContext)
     else if Sender = btNativeMsgDialog then
       LResult := MessageDlg(edMessage.Text, TMsgDlgType(rgDlgType.ItemIndex), Buttons, 0)
     else if Sender = btCustomMsgDialog then
-      LResult := StyledMessageDlgPos(edMessage.Text, TMsgDlgType(rgDlgType.ItemIndex), Buttons, HelpContext)
+      LResult := StyledMessageDlgPos(edMessage.Text, TMsgDlgType(rgDlgType.ItemIndex), Buttons, HelpContext, -1, -1, 2000)
     else
       LResult := mrNone;
   end;
   ShowSelection(LResult);
-
-  KillTimer(0, TimerId);
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
@@ -302,8 +305,6 @@ begin
   Screen.MessageFont.Assign(Font);
   inherited;
 end;
-
-
 
 procedure TMainForm.RaiseDatabaseError(Sender: TObject);
 begin
@@ -419,16 +420,12 @@ begin
   LTaskDialog.ExpandedText := ExpandedTextMemo.Text;
   LTaskDialog.VerificationText := VerificationTextMemo.Text;
   LTaskDialog.MainIcon := rgMainIcon.ItemIndex;
+
+  if (LTaskDialog is TStyledTaskDialog) then
+    TStyledTaskDialog(LTaskDialog).AutoCloseDelayMS  := 5000;
+
   LTaskDialog.Execute(Self.Handle);
   ShowSelection(LTaskDialog.ModalResult);
-end;
-
-procedure TMainForm.TaskDialogTimer(Sender: TObject; TickCount: Cardinal; var Reset: Boolean);
-begin
-   //TaskDialog.ProgressBar.Position := 0; //MyThread.CurrentProgressPercent;
-   // Demo
-   TaskDialog.ProgressBar.Position :=  TaskDialog.ProgressBar.Position + 1;
-   //TaskDialog.Execute(Self.Handle);
 end;
 
 initialization

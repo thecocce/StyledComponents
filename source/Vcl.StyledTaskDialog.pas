@@ -356,6 +356,7 @@ begin
   Application.ModalStarted;
   LTaskDialog := TStyledTaskDialog.Create(nil);
   LTaskDialog.Flags := LTaskDialog.Flags + [tfCallbackTimer {, tfShowProgressBar}];
+  LTaskDialog.AutoCloseDelayMS := AutoCloseDelayMS;
   try
     // Assign buttons
     for DlgBtn := Low(TMsgDlgBtn) to High(TMsgDlgBtn) do
@@ -470,9 +471,6 @@ function StyledTaskDlgPos(const Title, Msg: string; DlgType: TMsgDlgType;
 var
   MsgWithTitle: string;
 begin
-  if AutoCloseDelayMS > 0 then
-    TimerId := SetTimer(0, 0, 3 * 1000, @CloseMessageBox);
-
   if Title <> '' then
     MsgWithTitle := UpperCase(Title)+sLineBreak+Msg
   else
@@ -481,9 +479,6 @@ begin
     Result := DoTaskMessageDlgPos(Title, Msg, DlgType, Buttons, HelpCtx, DefaultButton, X, Y, nil, AutoCloseDelayMS)
   else
     Result := StyledMessageDlgPos(MsgWithTitle, DlgType, Buttons, DefaultButton, HelpCtx, -1, -1, AutoCloseDelayMS);
-
-  if AutoCloseDelayMS > 0 then
-    KillTimer(0, TimerId);
 end;
 
 { TStyledTaskDialog }
@@ -593,8 +588,12 @@ end;
 
 function TStyledTaskDialog.Execute(ParentWnd: HWND): Boolean;
 begin
+  if FAutoCloseDelayMS > 0 then
+    TimerId := SetTimer(0, 0, FAutoCloseDelayMS, @CloseMessageBox);
   FParentWnd := ParentWnd;
   Result := inherited Execute(ParentWnd);
+  if FAutoCloseDelayMS > 0 then
+    KillTimer(0, TimerId);
 end;
 
 initialization
