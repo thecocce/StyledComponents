@@ -1,6 +1,11 @@
 inherited StyledTaskDialogAnimated: TStyledTaskDialogAnimated
   Caption = 'StyledTaskDialogAnimated'
   TextHeight = 13
+  inherited FooterPanel: TPanel
+    inherited FooterTextLabel: TLabel
+      Width = 996
+    end
+  end
   inherited CenterPanel: TPanel
     inherited ImagePanel: TPanel
       object SkAnimatedImage: TSkAnimatedImage
@@ -9,8 +14,14 @@ inherited StyledTaskDialogAnimated: TStyledTaskDialogAnimated
         Width = 128
         Height = 128
         Align = alTop
-        ExplicitLeft = 1
-        ExplicitTop = 2
+      end
+    end
+    inherited MessageScrollBox: TScrollBox
+      inherited TitleLabel: TLabel
+        Width = 852
+      end
+      inherited AutoSizeLabel: TLabel
+        Width = 852
       end
     end
   end

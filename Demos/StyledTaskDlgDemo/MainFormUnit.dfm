@@ -139,7 +139,8 @@ object MainForm: TMainForm
         'tdiWarning'
         'tdiError'
         'tdiInformation'
-        'tdiShield')
+        'tdiShield'
+        'tdiCustom')
       TabOrder = 0
     end
     object CaptionEdit: TEdit
@@ -329,7 +330,7 @@ object MainForm: TMainForm
           Left = 5
           Top = 25
           Width = 82
-          Height = 30
+          Height = 33
           Margins.Top = 10
           Align = alClient
           Alignment = taCenter

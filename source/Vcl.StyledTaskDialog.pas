@@ -61,6 +61,7 @@ type
     FParentWnd: HWND;
     FPosition: TPoint;
     FAutoCloseDelayMS:Cardinal;
+    FCustomAnimationResource: String;
   strict protected
     function DoExecute(ParentWnd: HWND): Boolean; override;
     procedure DoOnButtonClicked(AModalResult: Integer; var CanClose: Boolean); override;
@@ -75,6 +76,8 @@ type
     property Flags;
     constructor Create(AOwner: TComponent); override;
     property AutoCloseDelayMS:Cardinal read FAutoCloseDelayMS write FAutoCloseDelayMS;
+
+    property CustomAnimationResource:String read FCustomAnimationResource write FCustomAnimationResource;
   end;
 
 function StyledMessageDlg(const Title, Msg: string; DlgType: TMsgDlgType;

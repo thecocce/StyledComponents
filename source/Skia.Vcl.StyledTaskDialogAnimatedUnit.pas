@@ -50,14 +50,17 @@ uses
   , System.UITypes
   , Skia
   , Skia.Vcl
-  , Vcl.ButtonStylesAttributes
+  , Vcl.ButtonStylesAttributes, Vcl.ComCtrls
+  , Vcl.StyledTaskDialog
   ;
 
 type
   TStyledTaskDialogAnimated = class(TStyledTaskDialogForm)
     SkAnimatedImage: TSkAnimatedImage;
   private
+    function getStyledTaskDialog: TStyledTaskDialog;
   protected
+    property StyledTaskDialog:TStyledTaskDialog read getStyledTaskDialog;
     procedure LoadImage(const AImageIndex: TImageIndex; AImageName: string); override;
   public
   end;
@@ -69,19 +72,29 @@ implementation
 uses
   Vcl.Themes;
 
+function TStyledTaskDialogAnimated.getStyledTaskDialog: TStyledTaskDialog;
+begin
+  result := TStyledTaskDialog(FTaskDialog);
+end;
+
 procedure TStyledTaskDialogAnimated.LoadImage(
   const AImageIndex: TImageIndex; AImageName: string);
 var
   LStream: TResourceStream;
   LImageName: string;
 begin
-  //Using ..\Animations\Animations.rc file compiled into Animations.RES file
-  LImageName := UpperCase(Format('LOTTIE_%s',[AImageName]));
+  if AImageName <> ANIMATION_CUSTOM then begin
+    //Using ..\Animations\Animations.rc file compiled into Animations.RES file
+    LImageName := UpperCase(Format('LOTTIE_%s',[AImageName]));
+  end else begin
+    LImageName := StyledTaskDialog.CustomAnimationResource;
+  end;
+
   LStream := TResourceStream.Create(HInstance, LImageName, RT_RCDATA);
   try
     SkAnimatedImage.LoadFromStream(LStream);
     //SkAnimatedImage.Loop := False;
-//    SkAnimatedImage.Animation.Start;
+    //SkAnimatedImage.Animation.Start;
   finally
     LStream.Free;
   end;

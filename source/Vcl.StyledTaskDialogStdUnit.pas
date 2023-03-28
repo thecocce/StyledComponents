@@ -49,7 +49,7 @@ uses
   , Vcl.StdCtrls
   , System.UITypes
   , Vcl.Imaging.pngimage
-  , Vcl.ButtonStylesAttributes, System.ImageList;
+  , Vcl.ButtonStylesAttributes, System.ImageList, Vcl.ComCtrls;
 
 type
   TStyledTaskDialogStd = class(TStyledTaskDialogForm)

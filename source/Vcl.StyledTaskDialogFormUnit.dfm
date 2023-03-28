@@ -44,7 +44,7 @@ object StyledTaskDialogForm: TStyledTaskDialogForm
       AlignWithMargins = True
       Left = 4
       Top = 4
-      Width = 996
+      Width = 81
       Height = 13
       Margins.Left = 4
       Margins.Top = 4
@@ -53,7 +53,6 @@ object StyledTaskDialogForm: TStyledTaskDialogForm
       Align = alTop
       Caption = 'FooterTextLabel'
       WordWrap = True
-      ExplicitWidth = 81
     end
   end
   object CenterPanel: TPanel
@@ -102,7 +101,7 @@ object StyledTaskDialogForm: TStyledTaskDialogForm
         AlignWithMargins = True
         Left = 4
         Top = 4
-        Width = 852
+        Width = 45
         Height = 13
         Margins.Left = 4
         Margins.Top = 4
@@ -111,13 +110,12 @@ object StyledTaskDialogForm: TStyledTaskDialogForm
         Align = alTop
         Caption = 'Title Text'
         WordWrap = True
-        ExplicitWidth = 45
       end
       object AutoSizeLabel: TLabel
         AlignWithMargins = True
         Left = 4
         Top = 25
-        Width = 852
+        Width = 72
         Height = 13
         Margins.Left = 4
         Margins.Top = 4
@@ -126,7 +124,6 @@ object StyledTaskDialogForm: TStyledTaskDialogForm
         Align = alTop
         Caption = 'AutoSizeLabel'
         WordWrap = True
-        ExplicitWidth = 72
       end
       object TextLabel: TLinkLabel
         AlignWithMargins = True

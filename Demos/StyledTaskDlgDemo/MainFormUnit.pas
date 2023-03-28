@@ -103,6 +103,7 @@ var
 implementation
 
 {$R *.dfm}
+{$R CustomAnimation.RC CustomAnimation.RES}
 
 uses
   System.TypInfo
@@ -110,7 +111,9 @@ uses
   , Vcl.StyledCmpMessages
   , Vcl.StyledCmpStrUtils
   , Vcl.ButtonStylesAttributes
-  , Vcl.StyledTaskDialogFormUnit;
+  , Vcl.StyledTaskDialogFormUnit
+  , System.Math
+  ;
 
 procedure CloseMessageBox(AWnd: HWND; AMsg: UINT; AIDEvent: UINT_PTR;
   ATicks: DWORD); stdcall;
@@ -421,8 +424,19 @@ begin
   LTaskDialog.VerificationText := VerificationTextMemo.Text;
   LTaskDialog.MainIcon := rgMainIcon.ItemIndex;
 
-  if (LTaskDialog is TStyledTaskDialog) then
+  if (LTaskDialog is TStyledTaskDialog) then begin
+    TStyledTaskDialog(LTaskDialog).ProgressBar.Min  := 0;
+    TStyledTaskDialog(LTaskDialog).ProgressBar.Max  := 5;
+    TStyledTaskDialog(LTaskDialog).ProgressBar.Position  := 0;
     TStyledTaskDialog(LTaskDialog).AutoCloseDelayMS  := 5000;
+
+    if rgMainIcon.ItemIndex = 5  then begin
+      if RandomRange(0,2) = 1 then
+        TStyledTaskDialog(LTaskDialog).CustomAnimationResource := 'ANIMATION_ROCKET'
+      else
+        TStyledTaskDialog(LTaskDialog).CustomAnimationResource := 'ANIMATION_PASSCODE';
+    end;
+  end;
 
   LTaskDialog.Execute(Self.Handle);
   ShowSelection(LTaskDialog.ModalResult);

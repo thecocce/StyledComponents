@@ -25,6 +25,8 @@
 {******************************************************************************}
 program AnimatedTaskDialogDemo;
 
+{$R 'CustomAnimations.res' 'CustomAnimations.rc'}
+
 uses
   Forms,
   MainFormUnit in 'MainFormUnit.pas' {MainForm},

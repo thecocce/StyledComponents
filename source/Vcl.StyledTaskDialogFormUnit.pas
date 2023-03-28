@@ -97,9 +97,6 @@ type
     FTickCount:Cardinal;
     FAutoCloseDelayMS:Cardinal;
     FFocusedButton: TStyledButton;
-    FCustomIcons: TStyledDialogIcons;
-    FTaskDialog: TCustomTaskDialog;
-    FDialogType: TMsgDlgType;
     FDialogBtnFamily: TStyledButtonFamily;
     FCommonButtons: TTaskDialogCommonButtons;
     FDefaultButton: TTaskDialogCommonButton;
@@ -177,6 +174,9 @@ type
     property OnVerificationClicked: TNotifyEvent read FOnVerificationClicked write FOnVerificationClicked;
 *)
   protected
+    FCustomIcons: TStyledDialogIcons;
+    FTaskDialog: TCustomTaskDialog;
+    FDialogType: TMsgDlgType;
     procedure UpdateCustomIcons;
     procedure Loaded; override;
     procedure LoadImage(const AImageIndex: TImageIndex;
@@ -215,6 +215,9 @@ procedure UnregisterTaskDialogFormClass;
 procedure DefineButtonsStyle(const AFamily: TStyledButtonFamily;
   const AClasses: TButtonClasses;
   const AAppearance: TStyledButtonAppearance);
+
+CONST
+  ANIMATION_CUSTOM = 'Custom';
 
 implementation
 
@@ -430,6 +433,7 @@ begin
     GetIconNameAndIndex(FMainIcon, LIconName, LIconIndex)
   else
     GetIconNameAndIndex(FDialogType, LIconName, LIconIndex);
+
   LoadImage(LIconIndex, LIconName);
 end;
 
@@ -684,7 +688,7 @@ procedure TStyledTaskDialogForm.GetIconNameAndIndex(
   ATaskDialog: TMsgDlgType; out AImageName: string; out AImageIndex: Integer);
 const
   ImageNames: array[TMsgDlgType] of string =
-    ('Warning', 'Error', 'Information', 'Confirmation', 'Custom');
+    ('Warning', 'Error', 'Information', 'Confirmation', ANIMATION_CUSTOM);
 begin
   AImageName := ImageNames[ATaskDialog];
   AImageIndex := Ord(ATaskDialog);
@@ -693,9 +697,9 @@ end;
 procedure TStyledTaskDialogForm.GetIconNameAndIndex(
   ATaskDialogIcon: TTaskDialogIcon; out AImageName: string; out AImageIndex: Integer);
 const
-  ImageNames: array[tdiNone..tdiShield] of string =
-    ('Custom', 'Warning', 'Error', 'Information', 'Shield');
-  ImageIndexes: array[tdiNone..tdiShield] of integer = (4, 0, 1, 2, 5);
+  ImageNames: array[tdiNone..tdiShield+1] of string =
+    ('Custom', 'Warning', 'Error', 'Information', 'Shield', 'Custom');
+  ImageIndexes: array[tdiNone..tdiShield+1] of integer = (4, 0, 1, 2, 5, -1);
 begin
   AImageName := ImageNames[ATaskDialogIcon];
   AImageIndex := ImageIndexes[ATaskDialogIcon];
