@@ -2,7 +2,7 @@
 {                                                                              }
 {       StyledTaskDialogForm: a Task Dialog Form with StyleButtons             }
 {                                                                              }
-{       Copyright (c) 2022 (Ethea S.r.l.)                                      }
+{       Copyright (c) 2022-2023 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
 {       Contributors:                                                          }
 {                                                                              }
@@ -48,7 +48,9 @@ uses
   Vcl.StandardButtonStyles,
   Vcl.BootstrapButtonStyles,
   Vcl.AngularButtonStyles,
-  Vcl.ButtonStylesAttributes, Vcl.ComCtrls;
+  Vcl.ButtonStylesAttributes,
+  Vcl.ColorButtonStyles,
+  Vcl.ComCtrls;
 
 type
   TTaskDialogLauncherHandler = class(TInterfacedObject, ITaskDialogLauncher)
@@ -183,7 +185,7 @@ type
       AImageName: string); virtual; abstract;
     procedure DefaultDialogSize(out AClientWidth, AClientHeight, AImageSize: Integer); virtual;
   public
-    procedure SetDialogFont(const AFont: TFont);
+    procedure SetDialogFont(const AFont: TFont); virtual;
     constructor Create(AOwner: TComponent); override;
   end;
 
@@ -244,8 +246,6 @@ begin
   if Length(AClasses) <> mrYesToAll then
     raise Exception.CreateFmt('AClasses array of DefineButtonsStyle must contains %d TStyledButtonClass',
       [mrYesToAll]);
-
-
 end;
 
 procedure RegisterTaskDialogFormClass(AFormClass: TStyledTaskDialogFormClass);
@@ -311,7 +311,8 @@ end;
 
 procedure TStyledTaskDialogForm.SetFocusToButton(AStyledButton: TStyledButton);
 begin
-  AStyledButton.SetFocus;
+  if AStyledButton.CanFocus then
+    AStyledButton.SetFocus;
   FFocusedButton := AStyledButton;
 end;
 
@@ -339,8 +340,16 @@ end;
 procedure TStyledTaskDialogForm.SetDialogFont(const AFont: TFont);
 begin
   Self.Font.Assign(AFont);
-  TitleLabel.Font.Name := Font.Name;
   TextLabel.Font.Name := Font.Name;
+  TextLabel.Font.Size := AFont.Size;
+  //TitleLabel font attributes
+  if not StyleServices.Enabled or StyleServices.IsSystemStyle then
+    TitleLabel.Font.Color := clHighlight
+  else
+    TextLabel.Font.Color := StyleServices.GetSystemColor(clHighlight);
+  TitleLabel.Font.Style := [TFontStyle.fsBold];
+  TitleLabel.Font.Name := Font.Name;
+  TitleLabel.Font.Height := Round(AFont.Height * 1.4);
 end;
 
 procedure TStyledTaskDialogForm.SetHelpContext(const AValue: Integer);
@@ -386,8 +395,13 @@ begin
 
   AutoSizeLabel.Visible := False;
 
-  MessageScrollBox.VertScrollBar.Visible :=
-    LCalcHeight > Constraints.MinHeight;
+  if LCalcHeight > LHeight then
+  begin
+    MessageScrollBox.VertScrollBar.Visible := True;
+    MessageScrollBox.VertScrollBar.Range := LCalcHeight;
+  end
+  else
+    MessageScrollBox.VertScrollBar.Visible := False;
 end;
 
 procedure TStyledTaskDialogForm.AdjustWidth;
@@ -598,18 +612,8 @@ begin
 end;
 
 procedure TStyledTaskDialogForm.FormCreate(Sender: TObject);
-//var
-//  LRegion: hrgn;
 begin
-  if not StyleServices.Enabled or StyleServices.IsSystemStyle then
-    TitleLabel.Font.Color := clHighlight
-  else
-    TextLabel.Font.Color := StyleServices.GetSystemColor(clHighlight);
-
   FooterPanel.Visible := False;
-
-//  LRegion := CreateRoundRectRgn(0, 0, Self.width, Self.height, 20, 20);
-//  SetwindowRgn(handle, LRegion, true);
 end;
 
 procedure TStyledTaskDialogForm.FormDestroy(Sender: TObject);
@@ -664,14 +668,20 @@ end;
 
 procedure TStyledTaskDialogForm.FormShow(Sender: TObject);
 begin
-  ShowDialogForm;
-  AdjustButtonsCaption;
-  AdjustHeight;
-  AdjustWidth;
-  PlayMessageDlgSound;
-  FocusDefaultButton;
-  ApplyProgressBarValues;
-  ApplyCountDownCaptions;
+  Screen.Cursor := crHourGlass;
+  try
+    ShowDialogForm;
+    AdjustButtonsCaption;
+    AdjustWidth;
+    AutoSizeLabel.AutoSize := True;
+    AdjustHeight;
+    PlayMessageDlgSound;
+    FocusDefaultButton;
+    ApplyProgressBarValues;
+    ApplyCountDownCaptions;
+  finally
+    Screen.Cursor := crDefault;
+  end;
 end;
 
 function TStyledTaskDialogForm.GetFooterText: string;
@@ -728,15 +738,18 @@ begin
   CancelButton.Caption := STR_CANCEL;
   HelpButton.Caption := STR_HELP;
   RetryButton.Caption := STR_RETRY;
+  AbortButton.Caption := STR_ABORT;
+  IgnoreButton.Caption := STR_IGNORE;
+  AllButton.Caption := STR_ALL;
+  NoToAllButton.Caption := STR_NOTOALL;
+  YesToAllButton.Caption := STR_YESTOALL;
+  CloseButton.Caption := STR_CLOSE;
   OutputDebugString(PChar('AdjustButtonsCaption'));
 end;
 
 procedure TStyledTaskDialogForm.Loaded;
 begin
   TextLabel.Align := alTop;
-  TitleLabel.Font.Style := [TFontStyle.fsBold];
-  TitleLabel.Font.Height := Round(TitleLabel.Font.Height * 1.4);
-  TextLabel.Font.Height := Round(TextLabel.Font.Height * 1.2);
   inherited;
 end;
 

@@ -1,8 +1,9 @@
 {******************************************************************************}
 {                                                                              }
-{       StyledTaskDialogDemo: a Demo for Task Dialog Components                }
+{       AnimatedTaskDialogDemo: a Demo for Task Dialog Components              }
+{       with animations using Skia4Delphi                                      }
 {                                                                              }
-{       Copyright (c) 2022 (Ethea S.r.l.)                                      }
+{       Copyright (c) 2022-2023 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
 {       Contributors:                                                          }
 {                                                                              }
@@ -35,14 +36,13 @@ uses
   Vcl.StyledCmpMessages in '..\..\source\Vcl.StyledCmpMessages.pas',
   Vcl.StyledCmpStrUtils in '..\..\source\Vcl.StyledCmpStrUtils.pas',
   Vcl.StyledTaskDialog in '..\..\source\Vcl.StyledTaskDialog.pas',
-  Vcl.StyledTaskDialogFormUnit in '..\..\source\Vcl.StyledTaskDialogFormUnit.pas' {StyledTaskDialogForm},
   Skia.Vcl.StyledTaskDialogAnimatedUnit in '..\..\source\Skia.Vcl.StyledTaskDialogAnimatedUnit.pas' {StyledTaskDialogStd};
 
 {$R *.res}
 
 begin
   Application.Initialize;
-  Application.Title := 'Animated TaskDialog Demo - Copyright (c) 2022 - Ethea S.r.l.';
+  Application.Title := 'Animated TaskDialog Demo - Copyright (c) - Ethea S.r.l.';
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TMainForm, MainForm);
   Application.OnException := MainForm.showError;

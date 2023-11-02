@@ -1,8 +1,9 @@
 {******************************************************************************}
 {                                                                              }
-{       StyledTaskDialogDemo: a Demo for Task Dialog Components                }
+{       Main form used by two examples:                                        }
+{       StyledTaskDialogDemo and AnimatedTaskDialogDemo                        }
 {                                                                              }
-{       Copyright (c) 2022 (Ethea S.r.l.)                                      }
+{       Copyright (c) 2022-2023 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
 {       Contributors:                                                          }
 {                                                                              }
@@ -178,6 +179,9 @@ var
   Msg: string;
   LButtonName: string;
 begin
+  //Example to resize message font
+  //Screen.MessageFont.Size := Round(Screen.MessageFont.Size * 1.2);
+
   Caption := Application.Title;
   MRLabel.Font.Style := [TFontStyle.fsBold];
   FontComboBox.Items.Assign(Screen.Fonts);
@@ -443,7 +447,9 @@ begin
 end;
 
 initialization
+{$IFDEF DEBUG}
   ReportMemoryLeaksOnShutdown := True;
+{$ENDIF}
 
 end.
 

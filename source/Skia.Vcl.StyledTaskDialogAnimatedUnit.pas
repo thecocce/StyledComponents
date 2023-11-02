@@ -1,9 +1,9 @@
 {******************************************************************************}
 {                                                                              }
-{       StyledTaskDialogStd: an example of Task Dialog Form                    }
+{       StyledTaskDialogAnimated: an example of Task Dialog Form               }
 {       using a TSkAnimatedImage with Lottie Animations                        }
 {                                                                              }
-{       Copyright (c) 2022 (Ethea S.r.l.)                                      }
+{       Copyright (c) 2022-2023 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
 {       Contributors:                                                          }
 {                                                                              }
@@ -41,16 +41,18 @@ uses
   , Vcl.Controls
   , Vcl.Forms
   , Vcl.Dialogs
-  , Vcl.StyledTaskDialogFormUnit
+  , Vcl.StyledButton
   , Vcl.StandardButtonStyles
   , Vcl.BootstrapButtonStyles
-  , Vcl.StyledButton
+  , Vcl.ButtonStylesAttributes
+  , Vcl.AngularButtonStyles
+  , Vcl.ColorButtonStyles
+  , Vcl.StyledTaskDialogFormUnit
   , Vcl.ExtCtrls
   , Vcl.StdCtrls
   , System.UITypes
-  , Skia
   , Skia.Vcl
-  , Vcl.ButtonStylesAttributes, Vcl.ComCtrls
+  , Vcl.ComCtrls
   , Vcl.StyledTaskDialog
   ;
 

@@ -2,7 +2,7 @@
 {                                                                              }
 {       StyledTaskDialog: a Task Dialog Component with StyleButtons            }
 {                                                                              }
-{       Copyright (c) 2022 (Ethea S.r.l.)                                      }
+{       Copyright (c) 2022-2023 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
 {       Contributors:                                                          }
 {                                                                              }
@@ -43,7 +43,7 @@ uses
 type
   TStyledDialogIcons = array[TMsgDlgType] of TIcon;
 
-  //  Abstraction of an SVG document
+  //  Abstraction of a Dialog Launcher
   ITaskDialogLauncher = interface
     ['{B2F16F98-C163-4706-A803-E624126D8DF6}']
     function DoExecute(ParentWnd: HWND;
@@ -80,12 +80,25 @@ type
     property CustomAnimationResource:String read FCustomAnimationResource write FCustomAnimationResource;
   end;
 
+function StyledMessageDlg(const Msg: string; DlgType: TMsgDlgType;
+  Buttons: TMsgDlgButtons; HelpCtx: Longint): Integer; overload;
+function StyledMessageDlg(const Msg: string; DlgType: TMsgDlgType;
+  Buttons: TMsgDlgButtons; HelpCtx: Longint; DefaultButton: TMsgDlgBtn): Integer; overload;
+function StyledMessageDlg(const Msg: string; DlgType: TMsgDlgType;
+  Buttons: TMsgDlgButtons; HelpCtx: Longint; DefaultButton: TMsgDlgBtn;
+  CustomButtonCaptions: array of string): Integer; overload;
+function StyledMessageDlg(const Title, Msg: string; DlgType: TMsgDlgType;
+  Buttons: TMsgDlgButtons; HelpCtx: Longint; DefaultButton: TMsgDlgBtn;
+  CustomButtonCaptions: array of string): Integer; overload;
+
 function StyledMessageDlg(const Title, Msg: string; DlgType: TMsgDlgType;
   Buttons: TMsgDlgButtons; HelpCtx: Longint;
     AutoCloseDelayMS:Cardinal = 0): Integer; overload;
 function StyledMessageDlg(const Title, Msg: string; DlgType: TMsgDlgType;
   Buttons: TMsgDlgButtons; HelpCtx: Longint; DefaultButton: TMsgDlgBtn;
     AutoCloseDelayMS:Cardinal = 0): Integer; overload;
+    
+
 function StyledMessageDlgPos(const Msg: string; DlgType: TMsgDlgType;
   Buttons: TMsgDlgButtons; HelpCtx: Longint;
   X: Integer = -1; Y: Integer = -1;
@@ -113,6 +126,8 @@ function GetTaskDlgType(const AIcon: TTaskDialogIcon): TMsgDlgType;
 function GetDialogFont: TFont;
 function GetDialogBtnFamily: TStyledButtonFamily;
 
+function GetDialogTypeTitle(const DlgType: TMsgDlgType): string;
+
 implementation
 
 uses
@@ -131,7 +146,9 @@ uses
   , Winapi.ShellApi
   , Vcl.StyledCmpMessages
   , Vcl.StyledButton
-  , Vcl.StyledCmpStrUtils;
+  , Vcl.StyledCmpStrUtils
+  , Vcl.StyledTaskDialogStdUnit
+  ;
 
 var
   TaskDialogExecute: ITaskDialogLauncher;
@@ -168,10 +185,24 @@ begin
 {$ENDIF}
 end;
 
+function StyledMessageDlg(const Msg: string; DlgType: TMsgDlgType;
+  Buttons: TMsgDlgButtons; HelpCtx: Longint): Integer; overload;
+begin
+  Result := StyledTaskDlgPos(GetDialogTypeTitle(DlgType),
+    Msg, DlgType, Buttons, HelpCtx, -1, -1);
+end;
+
 function StyledMessageDlg(const Title, Msg: string; DlgType: TMsgDlgType;
   Buttons: TMsgDlgButtons; HelpCtx: Longint; AutoCloseDelayMS:Cardinal = 0): Integer;
 begin
   Result := StyledTaskDlgPos(Title, Msg, DlgType, Buttons, HelpCtx, -1, -1, AutoCloseDelayMS);
+end;
+
+function StyledMessageDlg(const Msg: string; DlgType: TMsgDlgType;
+  Buttons: TMsgDlgButtons; HelpCtx: Longint; DefaultButton: TMsgDlgBtn): Integer; overload;
+begin
+  Result := StyledTaskDlgPos(GetDialogTypeTitle(DlgType),
+    Msg, DlgType, Buttons, DefaultButton, HelpCtx, -1, -1);
 end;
 
 function StyledMessageDlg(const Title, Msg: string; DlgType: TMsgDlgType;
@@ -179,6 +210,22 @@ function StyledMessageDlg(const Title, Msg: string; DlgType: TMsgDlgType;
 begin
   Result := StyledTaskDlgPos(Title, Msg, DlgType, Buttons, DefaultButton,
     HelpCtx, -1, -1, AutoCloseDelayMS);
+end;
+
+function StyledMessageDlg(const Msg: string; DlgType: TMsgDlgType;
+  Buttons: TMsgDlgButtons; HelpCtx: Longint; DefaultButton: TMsgDlgBtn;
+  CustomButtonCaptions: array of string): Integer; overload;
+begin
+  Result := StyledTaskDlgPos(GetDialogTypeTitle(DlgType), Msg, DlgType,
+    Buttons, DefaultButton, HelpCtx, -1, -1);
+end;
+
+function StyledMessageDlg(const Title, Msg: string; DlgType: TMsgDlgType;
+  Buttons: TMsgDlgButtons; HelpCtx: Longint; DefaultButton: TMsgDlgBtn;
+  CustomButtonCaptions: array of string): Integer; overload;
+begin
+  Result := StyledTaskDlgPos(Title, Msg, DlgType, Buttons, DefaultButton,
+    HelpCtx, -1, -1);
 end;
 
 function StyleMessageDlgPos(const Msg: string; DlgType: TMsgDlgType;
@@ -261,13 +308,8 @@ begin
       ChangeButtonCaption(mbHelp,'&'+STR_HELP);
       ChangeButtonCaption(mbClose,'&'+STR_CLOSE);
 
-      case DlgType of
-        mtWarning      : Dlg.Caption := STR_WARNING;
-        mtError        : Dlg.Caption := STR_ERROR;
-        mtInformation  : Dlg.Caption := STR_INFORMATION;
-        mtConfirmation : Dlg.Caption := STR_CONFIRM;
-        mtCustom       : Dlg.Caption := STR_INFORMATION;
-      end;
+      //Caption translated
+      Dlg.Caption := GetDialogTypeTitle(DlgType);
 
       Result := Dlg.ShowModal;
     finally
@@ -369,18 +411,18 @@ begin
         LTaskDialogButtonItem := LTaskDialog.Buttons.Add;
         //Button Caption translated
         case DlgBtn of
-          mbYes: LTaskDialogButtonItem.Caption := '&'+STR_YES;
-          mbNo: LTaskDialogButtonItem.Caption := '&'+STR_NO;
+          mbYes: LTaskDialogButtonItem.Caption := STR_YES;
+          mbNo: LTaskDialogButtonItem.Caption := STR_NO;
           mbOK: LTaskDialogButtonItem.Caption := STR_OK;
           mbCancel: LTaskDialogButtonItem.Caption := STR_CANCEL;
           mbAbort: LTaskDialogButtonItem.Caption := STR_ABORT;
           mbRetry: LTaskDialogButtonItem.Caption := STR_RETRY;
           mbIgnore: LTaskDialogButtonItem.Caption := STR_IGNORE;
-          mbAll: LTaskDialogButtonItem.Caption := '&'+STR_ALL;
-          mbNoToAll: LTaskDialogButtonItem.Caption := '&'+STR_NOTOALL;
-          mbYesToAll: LTaskDialogButtonItem.Caption := '&'+STR_YESTOALL;
-          mbHelp: LTaskDialogButtonItem.Caption := '&'+STR_HELP;
-          mbClose: LTaskDialogButtonItem.Caption := '&'+STR_CLOSE;
+          mbAll: LTaskDialogButtonItem.Caption := STR_ALL;
+          mbNoToAll: LTaskDialogButtonItem.Caption := STR_NOTOALL;
+          mbYesToAll: LTaskDialogButtonItem.Caption := STR_YESTOALL;
+          mbHelp: LTaskDialogButtonItem.Caption := STR_HELP;
+          mbClose: LTaskDialogButtonItem.Caption := STR_CLOSE;
         end;
         if DlgBtn = DefaultButton then
           LTaskDialogButtonItem.Default := True;
@@ -401,14 +443,9 @@ begin
       MainIcon :=  IconMap[DlgType];
       Position := Point(X, Y);
       Text := Msg;
+
       //Caption translated
-      case DlgType of
-        mtWarning      : LTaskDialog.Caption := STR_WARNING;
-        mtError        : LTaskDialog.Caption := STR_ERROR;
-        mtInformation  : LTaskDialog.Caption := STR_INFORMATION;
-        mtConfirmation : LTaskDialog.Caption := STR_CONFIRM;
-        mtCustom       : LTaskDialog.Caption := STR_INFORMATION;
-      end;
+      LTaskDialog.Caption := GetDialogTypeTitle(DlgType);
 
       if Instruction <> '' then
         Title := Instruction
@@ -597,6 +634,17 @@ begin
   Result := inherited Execute(ParentWnd);
   if FAutoCloseDelayMS > 0 then
     KillTimer(0, TimerId);
+end;
+
+function GetDialogTypeTitle(const DlgType: TMsgDlgType): string;
+begin
+  case DlgType of
+    mtWarning      : Result := STR_WARNING;
+    mtError        : Result := STR_ERROR;
+    mtInformation  : Result := STR_INFORMATION;
+    mtConfirmation : Result := STR_CONFIRM;
+    mtCustom       : Result := STR_INFORMATION;
+  end;
 end;
 
 initialization

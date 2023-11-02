@@ -2,7 +2,7 @@
 {                                                                              }
 {       StyledButton: a Button Component based on TGraphicControl              }
 {                                                                              }
-{       Copyright (c) 2022 (Ethea S.r.l.)                                      }
+{       Copyright (c) 2022-2023 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
 {       Contributors:                                                          }
 {                                                                              }
@@ -30,12 +30,16 @@ interface
 {$INCLUDE StyledComponents.inc}
 
 uses
-  Vcl.Graphics
+  Winapi.Windows
+  , Vcl.Graphics
   , System.Classes
   , System.Contnrs
   , System.UITypes
   , System.Types
-  , Vcl.Controls;
+  , Vcl.Controls
+  , Vcl.Buttons
+  , Winapi.CommCtrl
+  ;
 
 const
   DEFAULT_RADIUS = 6;
@@ -44,6 +48,10 @@ resourcestring
   ERROR_FAMILY_NOT_FOUND = 'Styled Button Family "%s" not found';
 
 Type
+  //Windows Version
+  TWindowsVersion = (wvUndefined, wvWindowsXP, wvWindowsVista, wvWindows7,
+    wvWindows8, wvWindows8_1, wvWindows10, wvWindows11);
+
   //string typed attributes
   TStyledButtonFamily = string;
   TStyledButtonClass = string;
@@ -125,6 +133,8 @@ Type
   private
     FStyleFamily: TStyledButtonFamily;
     FStyledAttributes: IStyledButtonAttributes;
+  public
+    property StyledAttributes: IStyledButtonAttributes read FStyledAttributes;
   end;
 
 //utilities
@@ -136,23 +146,36 @@ function ColorIsLight(Color: TColor): Boolean;
 function SameStyledButtonStyle(Style1, Style2: TStyledButtonAttributes): Boolean;
 procedure CloneButtonStyle(const ASource: TStyledButtonAttributes;
   var ADest: TStyledButtonAttributes);
+function GetWindowsVersion: TWindowsVersion;
+
+//drawing "old-style" with masked bitmap
+procedure DrawBitBtnGlyph(ACanvas: TCanvas; ARect: TRect; Kind: Vcl.Buttons.TBitBtnKind;
+  AState: TButtonState; AEnabled: Boolean;
+  AOriginal: TBitmap; ANumGlyphs: Integer; const ATransparentColor: TColor);
 
 //drawing Button
 procedure CanvasDrawShape(const ACanvas: TCanvas; ARect: TRect;
   const ADrawType: TStyledButtonDrawType; const ACornerRadius: Integer);
+//drawing bar and triangle for SplitButton
+procedure CanvasDrawBarAndTriangle(const ACanvas: TCanvas; const ARect: TRect;
+  const AScaleFactor: Single; ABarColor, ATriangleColor: TColor);
 
 //ButtonFamily Factory
 procedure RegisterButtonFamily(
   const AStyledButtonAttributes: IStyledButtonAttributes);
 function GetButtonFamilies: TObjectList;
+function GetButtonFamilyClass(const AFamilyName: TStyledButtonFamily): TButtonFamily;
 function GetButtonFamilyName(const Index: Integer): TStyledButtonFamily;
+function GetButtonClasses(const AFamily: TButtonFamily): TButtonClasses;
+function GetButtonAppearances(const AFamily: TButtonFamily): TButtonAppearances;
 function GetButtonFamilyClasses(const AFamily: TStyledButtonFamily): TButtonClasses;
 function GetButtonFamilyAppearances(const AFamily: TStyledButtonFamily): TButtonAppearances;
 
 function StyleFamilyCheckAttributes(
   const AFamily: TStyledButtonFamily;
   var AClass: TStyledButtonClass;
-  var AAppearance: TStyledButtonAppearance): Boolean;
+  var AAppearance: TStyledButtonAppearance;
+  out AButtonFamily: TButtonFamily): Boolean;
 
 procedure StyleFamilyUpdateAttributes(
   const AFamily: TStyledButtonFamily;
@@ -170,13 +193,17 @@ procedure StyleFamilyUpdateAttributesByModalResult(
 implementation
 
 uses
-  Winapi.Windows
+  System.Win.Registry
 {$ifdef GDIPlusSupport}
   , Winapi.GDIPAPI
   , Winapi.GDIPOBJ
 {$endif}
   , System.SysUtils
-  , System.Math;
+  , System.Math
+  ;
+
+var
+  _WindowsVersion: TWindowsVersion;
 
 function SameStyledButtonStyle(Style1, Style2: TStyledButtonAttributes): Boolean;
 begin
@@ -259,6 +286,47 @@ begin
   ADest.Radius := ASource.Radius;
 end;
 
+function GetWindowsVersion: TWindowsVersion;
+var
+  Reg: TRegistry;
+  VersionInfo: TOSVersionInfo;
+  LBuildNumber: Integer;
+begin
+  if _WindowsVersion = wvUndefined then
+  begin
+    VersionInfo.dwOSVersionInfoSize := sizeOf(TOSVersionInfo);
+    Reg := TRegistry.Create;
+    Try
+      Reg.RootKey := HKEY_LOCAL_MACHINE;
+      case VersionInfo.dwPlatformID of
+        VER_PLATFORM_WIN32_WINDOWS:
+          Reg.OpenKeyReadOnly('\Software\Microsoft\Windows\CurrentVersion');
+      else
+        Reg.OpenKeyReadOnly('\Software\Microsoft\Windows NT\CurrentVersion');
+      end;
+      LBuildNumber := StrToIntDef(Reg.ReadString('CurrentBuild'), 0);
+      if LBuildNumber >= 22000 then
+        _WindowsVersion := wvWindows11
+      else if LBuildNumber >= 10240 then
+        _WindowsVersion := wvWindows10
+      else if LBuildNumber >= 9600 then
+        _WindowsVersion := wvWindows8_1
+      else if LBuildNumber >= 9200 then
+        _WindowsVersion := wvWindows8
+      else if LBuildNumber >= 7600 then
+        _WindowsVersion := wvWindows7
+      else if LBuildNumber >= 6000 then
+        _WindowsVersion := wvWindowsVista
+      else if LBuildNumber >= 2600 then
+        _WindowsVersion := wvWindowsXP;
+      Reg.CloseKey;
+    Finally
+      Reg.Free;
+    End;
+  end;
+  Result := _WindowsVersion;
+end;
+
 var
   FFamilies: TObjectList;
 
@@ -285,10 +353,10 @@ end;
 function StyleFamilyCheckAttributes(
   const AFamily: TStyledButtonFamily;
   var AClass: TStyledButtonClass;
-  var AAppearance: TStyledButtonAppearance): Boolean;
+  var AAppearance: TStyledButtonAppearance;
+  out AButtonFamily: TButtonFamily): Boolean;
 var
   I: Integer;
-  LButtonFamily: TButtonFamily;
   LClasses: TButtonClasses;
   LAppearances: TButtonAppearances;
   LDefaultClass: TStyledButtonClass;
@@ -296,13 +364,13 @@ var
   LClassFound, LAppearanceFound: Boolean;
 begin
   Result := True;
-  if GetButtonFamily(AFamily, LButtonFamily) then
+  if GetButtonFamily(AFamily, AButtonFamily) then
   begin
-    LClasses := LButtonFamily.FStyledAttributes.GetButtonClasses;
-    LButtonFamily.FStyledAttributes.GetStyleByModalResult(mrNone,
+    AButtonFamily.FStyledAttributes.GetStyleByModalResult(mrNone,
        LDefaultClass, LDefaultAppearance);
-    LClassFound := False;
     //Check AClass
+    LClassFound := False;
+    LClasses := AButtonFamily.FStyledAttributes.GetButtonClasses;
     for I := 0 to Length(LClasses)-1 do
     begin
       if SameText(LClasses[I], AClass) then
@@ -318,9 +386,9 @@ begin
       Result := False;
     end;
 
-    LAppearances := LButtonFamily.FStyledAttributes.GetButtonAppearances;
-    LAppearanceFound := False;
     //Check AAppearance
+    LAppearanceFound := False;
+    LAppearances := AButtonFamily.FStyledAttributes.GetButtonAppearances;
     for I := 0 to Length(LAppearances)-1 do
     begin
       if SameText(LAppearances[I], AAppearance) then
@@ -393,6 +461,22 @@ end;
 function GetButtonFamilies: TObjectList;
 begin
   Result := FFamilies;
+end;
+
+function GetButtonFamilyClass(const AFamilyName: TStyledButtonFamily): TButtonFamily;
+begin
+  if not GetButtonFamily(AFamilyName, Result) then
+    raise Exception.CreateFmt(ERROR_FAMILY_NOT_FOUND,[AFamilyName]);
+end;
+
+function GetButtonClasses(const AFamily: TButtonFamily): TButtonClasses;
+begin
+  Result := AFamily.FStyledAttributes.GetButtonClasses;
+end;
+
+function GetButtonAppearances(const AFamily: TButtonFamily): TButtonAppearances;
+begin
+  Result := AFamily.FStyledAttributes.GetButtonAppearances;
 end;
 
 function GetButtonFamilyName(const Index: Integer): TStyledButtonFamily;
@@ -613,6 +697,7 @@ begin
     ARect.Width := 2;
 end;
 
+{$ifdef GDIPlusSupport}
 procedure GPInflateRectF(var ARect: TGPRectF;
   const AValue: Single);
 begin
@@ -622,7 +707,6 @@ begin
   ARect.Height := ARect.Height - AValue -1;
 end;
 
-{$ifdef GDIPlusSupport}
 function GetRoundRectangle(ARectangle: TGPRectF;
   ARadius: Single): TGPGraphicsPath;
 var
@@ -653,7 +737,226 @@ begin
   Result := MakeColor(GetRValue(ColRef), GetGValue(ColRef),
   GetBValue(ColRef));
 end;
+{$ifend}
 
+const //Same as Vcl.Buttons
+  BitBtnResNames: array[TBitBtnKind] of PChar = (
+    nil, 'BBOK', 'BBCANCEL', 'BBHELP', 'BBYES', 'BBNO', 'BBCLOSE',
+    'BBABORT', 'BBRETRY', 'BBIGNORE', 'BBALL');
+
+procedure DrawBitBtnGlyph(ACanvas: TCanvas; ARect: TRect; Kind: Vcl.Buttons.TBitBtnKind;
+  AState: TButtonState; AEnabled: Boolean;
+  AOriginal: TBitmap; ANumGlyphs: Integer; const ATransparentColor: TColor);
+const
+  ROP_DSPDxax = $00E20746;
+var
+  IL: TImageList;
+  LResName: String;
+  LOriginal, TmpImage, MonoBmp, DDB: TBitmap;
+  LNumGlyphs: Integer;
+  IWidth, IHeight: Integer;
+  IRect, ORect: TRect;
+  I: TButtonState;
+  DestDC: HDC;
+  LIndex: Integer;
+  {$IFDEF D10_4+}
+  LImage: TWicImage;
+  {$ENDIF}
+begin
+  if not AEnabled then
+    AState := bsDisabled;
+  LIndex := -1;
+  IL := nil;
+  TmpImage := nil;
+  LOriginal := nil;
+  try
+    if Kind = bkCustom then
+    begin
+      if ANumGlyphs = 0 then
+        Exit;
+      LOriginal := AOriginal;
+      LNumGlyphs := ANumGlyphs;
+    end
+    else
+    begin
+      //Load image from resources by Kind
+      LResName := BitBtnResNames[Kind];
+      {$IFDEF D10_4+}
+      LImage := TWicImage.Create;
+      try
+        LImage.InterpolationMode := wipmHighQualityCubic;
+        LImage.LoadFromResourceName(HInstance, LResName);
+        ACanvas.StretchDraw(ARect, LImage);
+        Exit;
+      finally
+        LImage.Free;
+      end;
+      {$ELSE}
+        LOriginal := TBitmap.Create;
+        LNumGlyphs := 2;
+        LOriginal.PixelFormat := pf32bit;
+        LOriginal.LoadFromResourceName(HInstance, LResName);
+      {$ENDIF}
+    end;
+    if (LOriginal.Width = 0) or (LOriginal.Height = 0) then
+      Exit;
+    IWidth := LOriginal.Width div LNumGlyphs;
+    IHeight := LOriginal.Height;
+    TmpImage := TBitmap.Create;
+    TmpImage.Width := IWidth;
+    TmpImage.Height := IHeight;
+    IL := TImageList.CreateSize(TmpImage.Width, TmpImage.Height);
+    IRect := Rect(0, 0, IWidth, IHeight);
+    TmpImage.Canvas.Brush.Color := clBtnFace;
+    TmpImage.Palette := CopyPalette(LOriginal.Palette);
+    I := AState;
+    if Ord(I) >= LNumGlyphs then I := bsUp;
+    ORect := Rect(Ord(I) * IWidth, 0, (Ord(I) + 1) * IWidth, IHeight);
+    case AState of
+      bsUp, bsDown,
+      bsExclusive:
+        begin
+          TmpImage.Canvas.CopyRect(IRect, LOriginal.Canvas, ORect);
+          if LOriginal.TransparentMode = tmFixed then
+            LIndex := IL.AddMasked(TmpImage, ATransparentColor)
+          else
+            LIndex := IL.AddMasked(TmpImage, clDefault);
+          IL.Masked := True;
+        end;
+      bsDisabled:
+        begin
+          MonoBmp := nil;
+          DDB := nil;
+          try
+            MonoBmp := TBitmap.Create;
+            DDB := TBitmap.Create;
+            DDB.Assign(LOriginal);
+            DDB.HandleType := bmDDB;
+            if ANumGlyphs > 1 then
+            with TmpImage.Canvas do
+            begin    { Change white & gray to clBtnHighlight and clBtnShadow }
+              CopyRect(IRect, DDB.Canvas, ORect);
+              MonoBmp.Monochrome := True;
+              MonoBmp.Width := IWidth;
+              MonoBmp.Height := IHeight;
+
+              { Convert white to clBtnHighlight }
+              DDB.Canvas.Brush.Color := clWhite;
+              MonoBmp.Canvas.CopyRect(IRect, DDB.Canvas, ORect);
+              Brush.Color := clBtnHighlight;
+              DestDC := Handle;
+              SetTextColor(DestDC, clBlack);
+              SetBkColor(DestDC, clWhite);
+              BitBlt(DestDC, 0, 0, IWidth, IHeight,
+                     MonoBmp.Canvas.Handle, 0, 0, ROP_DSPDxax);
+
+              { Convert gray to clBtnShadow }
+              DDB.Canvas.Brush.Color := clGray;
+              MonoBmp.Canvas.CopyRect(IRect, DDB.Canvas, ORect);
+              Brush.Color := clBtnShadow;
+              DestDC := Handle;
+              SetTextColor(DestDC, clBlack);
+              SetBkColor(DestDC, clWhite);
+              BitBlt(DestDC, 0, 0, IWidth, IHeight,
+                     MonoBmp.Canvas.Handle, 0, 0, ROP_DSPDxax);
+
+              { Convert transparent color to clBtnFace }
+              DDB.Canvas.Brush.Color := ColorToRGB(ATransparentColor);
+              MonoBmp.Canvas.CopyRect(IRect, DDB.Canvas, ORect);
+              Brush.Color := clBtnFace;
+              DestDC := Handle;
+              SetTextColor(DestDC, clBlack);
+              SetBkColor(DestDC, clWhite);
+              BitBlt(DestDC, 0, 0, IWidth, IHeight,
+                     MonoBmp.Canvas.Handle, 0, 0, ROP_DSPDxax);
+            end
+            else
+            begin
+              { Create a disabled version }
+              with MonoBmp do
+              begin
+                Assign(LOriginal);
+                HandleType := bmDDB;
+                Canvas.Brush.Color := clBlack;
+                Width := IWidth;
+                if Monochrome then
+                begin
+                  Canvas.Font.Color := clWhite;
+                  Monochrome := False;
+                  Canvas.Brush.Color := clWhite;
+                end;
+                Monochrome := True;
+              end;
+              with TmpImage.Canvas do
+              begin
+                Brush.Color := clBtnFace;
+                FillRect(IRect);
+                Brush.Color := clBtnHighlight;
+                SetTextColor(Handle, clBlack);
+                SetBkColor(Handle, clWhite);
+                BitBlt(Handle, 1, 1, IWidth, IHeight,
+                  MonoBmp.Canvas.Handle, 0, 0, ROP_DSPDxax);
+                Brush.Color := clBtnShadow;
+                SetTextColor(Handle, clBlack);
+                SetBkColor(Handle, clWhite);
+                BitBlt(Handle, 0, 0, IWidth, IHeight,
+                  MonoBmp.Canvas.Handle, 0, 0, ROP_DSPDxax);
+              end;
+            end;
+          finally
+            DDB.Free;
+            MonoBmp.Free;
+          end;
+          LIndex := IL.AddMasked(TmpImage, clDefault);
+        end;
+    end;
+    ImageList_DrawEx(IL.Handle, LIndex, ACanvas.Handle, ARect.Left, ARect.Top, 0, 0,
+      clNone, clNone, ILD_Transparent);
+  finally
+    TmpImage.Free;
+    if Kind <> bkCustom then
+      LOriginal.Free;
+    IL.Free;
+  end;
+end;
+
+procedure CanvasDrawBarAndTriangle(const ACanvas: TCanvas; const ARect: TRect;
+  const AScaleFactor: Single; ABarColor, ATriangleColor: TColor);
+var
+  LWidth: Integer;
+  LHeight: Integer;
+  LMargin: Integer;
+  Points2: array [0..1] of TPoint;
+  Points3: array [0..2] of TPoint;
+  LRect: TRect;
+begin
+  LHeight := Round(4 * AScaleFactor);
+  LMargin := (ARect.Height - LHeight) div 2;
+
+  //Draw vertical bar
+  ACanvas.Pen.Color := ABarColor;
+  LRect := Rect(ARect.Left-2,ARect.Top+2,ARect.Right-2,ARect.Bottom-2);
+  Points2[0] := Point(ARect.Left -1, ARect.Top + ACanvas.Pen.Width);
+  Points2[1] := Point(ARect.Left -1, ARect.Bottom - ACanvas.Pen.Width);
+  ACanvas.Polyline(Points2);
+
+  //Draw triangle
+  ACanvas.Pen.Color := ATriangleColor;
+  LRect := ARect;
+  LWidth  := LRect.Width - 8;
+  LRect.Left := ARect.Left + 2;
+  LRect.Right := LRect.Left + LWidth - 2;
+  LRect.Top := LMargin;
+  LRect.Bottom := LRect.Top + LHeight;
+  Points3[0] := Point(LRect.Left + LWidth, LRect.Top);
+  Points3[1] := Point(LRect.Left, LRect.Top);
+  Points3[2] := Point(LRect.Left + LWidth div 2, LRect.Bottom);
+  ACanvas.Brush.Color := ACanvas.Pen.Color;
+  ACanvas.Pen.Width := 1;
+  ACanvas.Polygon(Points3);
+end;
+
+{$ifdef GDIPlusSupport}
 procedure CanvasDrawShape(const ACanvas: TCanvas; ARect: TRect;
   const ADrawType: TStyledButtonDrawType; const ACornerRadius: Integer);
 var
@@ -685,7 +988,15 @@ begin
     else
       LPen := TGPPen.Create(LPenColor, LBorderWidth);
 
-    if (ADrawType in [btRounded]) then
+    if (ADrawType in [btRect]) then
+    begin
+      //Drawing Rectangular button (no need to GDI+)
+      AdjustCanvasRect(ACanvas, ARect, True);
+      if ACanvas.Brush.Style = bsSolid then
+        ACanvas.FillRect(ARect);
+      ACanvas.Rectangle(ARect);
+    end
+    else if (ADrawType in [btRounded]) then
     begin
       //Reduce canvas to draw a rounded rectangle of Pen Width
       GPInflateRectF(LRect, LBorderWidth);
@@ -697,14 +1008,6 @@ begin
         LGraphics.FillPath(LBrush, LPath);
       end;
       LGraphics.DrawPath(LPen, LPath);
-    end
-    else if (ADrawType in [btRect]) then
-    begin
-      //Drawing Rectangular button (no need to GDI+)
-      AdjustCanvasRect(ACanvas, ARect, True);
-      if ACanvas.Brush.Style = bsSolid then
-        ACanvas.FillRect(ARect);
-      ACanvas.Rectangle(ARect);
     end
     else
     begin
@@ -748,6 +1051,7 @@ end;
 {$endif}
 
 initialization
+  _WindowsVersion := wvUndefined;
   FFamilies := TObjectList.Create(True);
 
 finalization
